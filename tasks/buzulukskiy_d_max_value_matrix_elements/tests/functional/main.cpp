@@ -71,13 +71,15 @@ TEST_P(BuzulukskiyDMaxValueMatrixElementsTests, MatmulFromPic) {
 
 const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
 
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsMPI, InType>(kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements),
-                   ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsSEQ, InType>(kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements));
+const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsMPI, InType>(
+                                               kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements),
+                                           ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsSEQ, InType>(
+                                               kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = BuzulukskiyDMaxValueMatrixElementsTests::PrintFuncTestName<BuzulukskiyDMaxValueMatrixElementsTests>;
+const auto kPerfTestName =
+    BuzulukskiyDMaxValueMatrixElementsTests::PrintFuncTestName<BuzulukskiyDMaxValueMatrixElementsTests>;
 
 INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BuzulukskiyDMaxValueMatrixElementsTests, kGtestValues, kPerfTestName);
 

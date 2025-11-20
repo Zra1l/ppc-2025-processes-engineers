@@ -29,7 +29,8 @@ TEST_P(BuzulukskiyDMaxValueMatrixElementsPerfTests, RunPerfModes) {
 }
 
 const auto kAllPerfTasks =
-    ppc::util::MakeAllPerfTasks<InType, BuzulukskiyDMaxValueMatrixElementsMPI, BuzulukskiyDMaxValueMatrixElementsSEQ>(PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements);
+    ppc::util::MakeAllPerfTasks<InType, BuzulukskiyDMaxValueMatrixElementsMPI, BuzulukskiyDMaxValueMatrixElementsSEQ>(
+        PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
 
