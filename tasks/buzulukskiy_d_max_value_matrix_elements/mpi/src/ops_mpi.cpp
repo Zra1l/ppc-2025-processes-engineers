@@ -17,56 +17,44 @@ BuzulukskiyDMaxValueMatrixElementsMPI::BuzulukskiyDMaxValueMatrixElementsMPI(con
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsMPI::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
+  const Matrix& inputdata = GetInput();
+  const int rows = inputdata.rows;
+  const int columns = inputdata.columns;
+  const std::vector<int>& matrix = inputdata.data;
+
+  if(matrix.empty() || rows <= 0 || columns <= 0 || matrix.size() != (size_t)rows*columns)
+  {
+    return false;
+  }
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsMPI::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsMPI::RunImpl() {
-  auto input = GetInput();
-  if (input == 0) {
-    return false;
-  }
-
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
-    }
-  }
-
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
-
-  int rank = 0;
+  const Matrix& inputdata = GetInput();
+  const int rows = inputdata.rows;
+  const int columns = inputdata.columns;
+  const std::vector<int>& matrix = inputdata.data;
+  int rank,size;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (rank == 0) {
-    GetOutput() /= num_threads;
-  } else {
-    int counter = 0;
-    for (int i = 0; i < num_threads; i++) {
-      counter++;
-    }
+  const int rows_at_one_proces = rows/size;
+  const int remaining_rows = rows%size;
+  std::vector<int> how_many_to_one_proces(size, rows_at_one_proces*columns);
+  std::vector<int> offset(size, 0);
 
-    if (counter != 0) {
-      GetOutput() /= counter;
-    }
-  }
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  return GetOutput() > 0;
+  
+
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsMPI::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+  return true;
 }
 
 }  // namespace buzulukskiy_d_max_value_matrix_elements

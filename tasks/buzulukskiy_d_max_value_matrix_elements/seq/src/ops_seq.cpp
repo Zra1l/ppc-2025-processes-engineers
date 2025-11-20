@@ -15,46 +15,38 @@ BuzulukskiyDMaxValueMatrixElementsSEQ::BuzulukskiyDMaxValueMatrixElementsSEQ(con
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::ValidationImpl() {
-  return (GetInput() > 0) && (GetOutput() == 0);
+  const Matrix& inputdata = GetInput();
+  const int rows = inputdata.rows;
+  const int columns = inputdata.columns;
+  const std::vector<int>& matrix = inputdata.data;
+
+  if(matrix.empty() || rows <= 0 || columns <= 0 || matrix.size() != (size_t)rows*columns)
+  {
+    return false;
+  }
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::PreProcessingImpl() {
-  GetOutput() = 2 * GetInput();
-  return GetOutput() > 0;
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::RunImpl() {
-  if (GetInput() == 0) {
-    return false;
-  }
+  const Matrix& inputdata = GetInput();
+  const std::vector<int>& matrix = inputdata.data;
 
-  for (InType i = 0; i < GetInput(); i++) {
-    for (InType j = 0; j < GetInput(); j++) {
-      for (InType k = 0; k < GetInput(); k++) {
-        std::vector<InType> tmp(i + j + k, 1);
-        GetOutput() += std::accumulate(tmp.begin(), tmp.end(), 0);
-        GetOutput() -= i + j + k;
-      }
-    }
-  }
+  int max_value = matrix[0];
 
-  const int num_threads = ppc::util::GetNumThreads();
-  GetOutput() *= num_threads;
-
-  int counter = 0;
-  for (int i = 0; i < num_threads; i++) {
-    counter++;
+  for(size_t i = 0;i < matrix.size();i++)
+  {
+    max_value = std::max(max_value, matrix[i]);
   }
-
-  if (counter != 0) {
-    GetOutput() /= counter;
-  }
-  return GetOutput() > 0;
+  GetOutput() = max_value;
+  return true;
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::PostProcessingImpl() {
-  GetOutput() -= GetInput();
-  return GetOutput() > 0;
+  return true;
 }
 
 }  // namespace buzulukskiy_d_max_value_matrix_elements
