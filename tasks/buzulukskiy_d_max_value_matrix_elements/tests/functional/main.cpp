@@ -20,7 +20,7 @@
 
 namespace buzulukskiy_d_max_value_matrix_elements {
 
-class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
@@ -65,7 +65,7 @@ class NesterovARunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType
 
 namespace {
 
-TEST_P(NesterovARunFuncTestsProcesses, MatmulFromPic) {
+TEST_P(BuzulukskiyDMaxValueMatrixElementsTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
@@ -77,9 +77,9 @@ const auto kTestTasksList =
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = NesterovARunFuncTestsProcesses::PrintFuncTestName<NesterovARunFuncTestsProcesses>;
+const auto kPerfTestName = BuzulukskiyDMaxValueMatrixElementsTests::PrintFuncTestName<BuzulukskiyDMaxValueMatrixElementsTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, NesterovARunFuncTestsProcesses, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BuzulukskiyDMaxValueMatrixElementsTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
