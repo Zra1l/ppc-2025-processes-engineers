@@ -1,22 +1,15 @@
 #include <gtest/gtest.h>
-#include <stb/stb_image.h>
 
-#include <algorithm>
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <numeric>
-#include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "buzulukskiy_d_max_value_matrix_elements/common/include/common.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/mpi/include/ops_mpi.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
-#include "util/include/util.hpp"
 
 namespace buzulukskiy_d_max_value_matrix_elements {
 
@@ -28,27 +21,27 @@ class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTes
 
     switch (test_case) {
       case 1:
-        input_data_.rows = 2;
-        input_data_.columns = 2;
-        input_data_.data = {1, 2, 3, 4};
+        input_data.rows = 2;
+        input_data.columns = 2;
+        input_data.data = {1, 2, 3, 4};
         expected_max = 4;
         break;
       case 2:
-        input_data_.rows = 3;
-        input_data_.columns = 2;
-        input_data_.data = {-1, -5, 8, -3, 0, 7};
+        input_data.rows = 3;
+        input_data.columns = 2;
+        input_data.data = {-1, -5, 8, -3, 0, 7};
         expected_max = 8;
         break;
       case 3:
-        input_data_.rows = 1;
-        input_data_.columns = 1;
-        input_data_.data = {42};
+        input_data.rows = 1;
+        input_data.columns = 1;
+        input_data.data = {42};
         expected_max = 42;
         break;
       case 4:
-        input_data_.rows = 2;
-        input_data_.columns = 3;
-        input_data_.data = {5, 5, 5, 5, 10, 5};
+        input_data.rows = 2;
+        input_data.columns = 3;
+        input_data.data = {5, 5, 5, 5, 10, 5};
         expected_max = 10;
         break;
       default:
@@ -61,7 +54,7 @@ class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTes
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
 
  public:
@@ -70,7 +63,7 @@ class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTes
   }
 
  private:
-  InType input_data_{};
+  InType input_data{};
   int expected_max = 0;
   int test_case = 0;
 };

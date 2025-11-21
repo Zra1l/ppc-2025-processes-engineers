@@ -17,30 +17,30 @@ class BuzulukskiyDMaxValueMatrixElementsPerfTests : public ppc::util::BaseRunPer
     const int matrix_size = rows * cols;
     std::vector<int> data(matrix_size);
 
-    for (int i = 0; i < matrix_size; i++) {
-      data[i] = (i % 10000) + 1;  // 1-10000
+    for (int index = 0; index < matrix_size; ++index) {
+      data[index] = (index % 10000) + 1;  // 1-10000
     }
 
     data[0] = 99999;
     data[matrix_size - 1] = 99999;
 
-    input_data_.rows = rows;
-    input_data_.columns = cols;
-    input_data_.data = data;
-    expected_max_ = 99999;
+    input_data.rows = rows;
+    input_data.columns = cols;
+    input_data.data = data;
+    expected_max = 99999;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return (expected_max_ == output_data);
+    return (expected_max == output_data);
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
 
  private:
-  InType input_data_{};
-  int expected_max_ = 0;
+  InType input_data{};
+  int expected_max = 0;
 };
 
 TEST_P(BuzulukskiyDMaxValueMatrixElementsPerfTests, RunPerfModes) {
