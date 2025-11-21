@@ -1,6 +1,7 @@
 #include "buzulukskiy_d_max_value_matrix_elements/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "buzulukskiy_d_max_value_matrix_elements/common/include/common.hpp"
@@ -19,11 +20,8 @@ bool BuzulukskiyDMaxValueMatrixElementsSEQ::ValidationImpl() {
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
 
-  if (matrix.empty() || rows <= 0 || columns <= 0 ||
-      matrix.size() != static_cast<size_t>(rows) * static_cast<size_t>(columns)) {
-    return false;
-  }
-  return true;
+  return !(matrix.empty() || rows <= 0 || columns <= 0 ||
+           matrix.size() != static_cast<size_t>(rows) * static_cast<size_t>(columns));
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::PreProcessingImpl() {

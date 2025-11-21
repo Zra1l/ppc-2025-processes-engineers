@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <random>
+#include <vector>
 
 #include "buzulukskiy_d_max_value_matrix_elements/common/include/common.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/mpi/include/ops_mpi.hpp"

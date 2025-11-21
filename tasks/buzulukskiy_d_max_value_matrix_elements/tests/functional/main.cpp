@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
