@@ -12,22 +12,16 @@ namespace buzulukskiy_d_max_value_matrix_elements {
 class BuzulukskiyDMaxValueMatrixElementsPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
-    const int rows = 200;
-    const int cols = 200;
+    const int rows = 1000;
+    const int cols = 1000;
     const int matrix_size = rows * cols;
     std::vector<int> data(matrix_size);
 
-    std::mt19937 gen(42);
-    std::uniform_int_distribution<int> dist(1, 100000);
-
-    for (int i = 0; i < rows * cols; i++) {
-      data[i] = dist(gen);
+    for (int i = 0; i < matrix_size; i++) {
+      data[i] = (i % 10000) + 1;  // 1-10000
     }
 
     data[0] = 99999;
-    data[matrix_size / 4] = 99998;
-    data[matrix_size / 2] = 99997;
-    data[3 * matrix_size / 4] = 99996;
     data[matrix_size - 1] = 99999;
 
     input_data_.rows = rows;
