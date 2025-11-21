@@ -22,8 +22,8 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::ValidationImpl() {
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
 
-  return !(matrix.empty() || rows <= 0 || columns <= 0 ||
-           matrix.size() != static_cast<size_t>(rows) * static_cast<size_t>(columns));
+  return !matrix.empty() && rows > 0 && columns > 0 &&
+         matrix.size() == static_cast<size_t>(rows) * static_cast<size_t>(columns);
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsMPI::PreProcessingImpl() {
@@ -35,6 +35,11 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::RunImpl() {
   const int rows = inputdata.rows;
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
+
+  if (matrix.empty()) {
+    GetOutput() = 0;
+    return true;
+  }
 
   int rank = 0;
   int size = 1;

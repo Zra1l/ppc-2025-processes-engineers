@@ -11,6 +11,7 @@
 #include "buzulukskiy_d_max_value_matrix_elements/mpi/include/ops_mpi.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"  // ДОБАВЛЕНО: для ppc::util::GTestParamIndex
 
 namespace buzulukskiy_d_max_value_matrix_elements {
 

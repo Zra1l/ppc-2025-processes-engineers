@@ -20,8 +20,8 @@ bool BuzulukskiyDMaxValueMatrixElementsSEQ::ValidationImpl() {
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
 
-  return !(matrix.empty() || rows <= 0 || columns <= 0 ||
-           matrix.size() != static_cast<size_t>(rows) * static_cast<size_t>(columns));
+  return !matrix.empty() && rows > 0 && columns > 0 &&
+         matrix.size() == static_cast<size_t>(rows) * static_cast<size_t>(columns);
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::PreProcessingImpl() {
@@ -31,6 +31,12 @@ bool BuzulukskiyDMaxValueMatrixElementsSEQ::PreProcessingImpl() {
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::RunImpl() {
   const Matrix &inputdata = GetInput();
   const std::vector<int> &matrix = inputdata.data;
+
+  // Обязательная проверка на пустую матрицу
+  if (matrix.empty()) {
+    GetOutput() = 0;
+    return true;
+  }
 
   int max_value = matrix[0];
   for (size_t index = 1; index < matrix.size(); ++index) {
