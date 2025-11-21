@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <random>
+
 #include "buzulukskiy_d_max_value_matrix_elements/common/include/common.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/mpi/include/ops_mpi.hpp"
 #include "buzulukskiy_d_max_value_matrix_elements/seq/include/ops_seq.hpp"
@@ -10,14 +12,23 @@ namespace buzulukskiy_d_max_value_matrix_elements {
 class BuzulukskiyDMaxValueMatrixElementsPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
-    // Создаем большую матрицу для тестирования производительности
-    const int rows = 1000;
-    const int cols = 1000;
-    std::vector<int> data(rows * cols);
+    const int rows = 3000;
+    const int cols = 3000;
+    const int matrix_size = rows * cols;
+    std::vector<int> data(matrix_size);
 
-    // Заполняем случайными числами, но гарантируем известный максимум
-    std::fill(data.begin(), data.end(), 1);
-    data[rows * cols - 1] = 99999;  // Известный максимум
+    std::mt19937 gen(42);
+    std::uniform_int_distribution<int> dist(1, 100000);
+
+    for (int i = 0; i < rows * cols; i++) {
+      data[i] = dist(gen);
+    }
+
+    data[0] = 99999;
+    data[matrix_size / 4] = 99998;
+    data[matrix_size / 2] = 99997;
+    data[3 * matrix_size / 4] = 99996;
+    data[matrix_size - 1] = 99999;
 
     input_data_.rows = rows;
     input_data_.columns = cols;

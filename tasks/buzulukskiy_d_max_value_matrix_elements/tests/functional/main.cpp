@@ -64,7 +64,7 @@ class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTes
     return input_data_;
   }
 
-  public:
+ public:
   static std::string PrintTestParam(const TestType &test_param) {
     return "TestCase_" + std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
   }
