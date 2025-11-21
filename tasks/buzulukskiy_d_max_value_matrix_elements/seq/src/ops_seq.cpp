@@ -1,5 +1,6 @@
 #include "buzulukskiy_d_max_value_matrix_elements/seq/include/ops_seq.hpp"
 
+#include <algorithm>
 #include <numeric>
 #include <vector>
 
@@ -15,13 +16,12 @@ BuzulukskiyDMaxValueMatrixElementsSEQ::BuzulukskiyDMaxValueMatrixElementsSEQ(con
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::ValidationImpl() {
-  const Matrix& inputdata = GetInput();
+  const Matrix &inputdata = GetInput();
   const int rows = inputdata.rows;
   const int columns = inputdata.columns;
-  const std::vector<int>& matrix = inputdata.data;
+  const std::vector<int> &matrix = inputdata.data;
 
-  if(matrix.empty() || rows <= 0 || columns <= 0 || matrix.size() != (size_t)rows*columns)
-  {
+  if (matrix.empty() || rows <= 0 || columns <= 0 || matrix.size() != (size_t)rows * columns) {
     return false;
   }
   return true;
@@ -32,13 +32,12 @@ bool BuzulukskiyDMaxValueMatrixElementsSEQ::PreProcessingImpl() {
 }
 
 bool BuzulukskiyDMaxValueMatrixElementsSEQ::RunImpl() {
-  const Matrix& inputdata = GetInput();
-  const std::vector<int>& matrix = inputdata.data;
+  const Matrix &inputdata = GetInput();
+  const std::vector<int> &matrix = inputdata.data;
 
   int max_value = matrix[0];
 
-  for(size_t i = 0;i < matrix.size();i++)
-  {
+  for (size_t i = 1; i < matrix.size(); i++) {
     max_value = std::max(max_value, matrix[i]);
   }
   GetOutput() = max_value;

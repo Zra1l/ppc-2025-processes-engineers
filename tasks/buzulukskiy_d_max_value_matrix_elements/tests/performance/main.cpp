@@ -8,20 +8,34 @@
 namespace buzulukskiy_d_max_value_matrix_elements {
 
 class BuzulukskiyDMaxValueMatrixElementsPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
-  InType input_data_{};
-
+ protected:
   void SetUp() override {
-    input_data_ = kCount_;
+    // Создаем большую матрицу для тестирования производительности
+    const int rows = 1000;
+    const int cols = 1000;
+    std::vector<int> data(rows * cols);
+
+    // Заполняем случайными числами, но гарантируем известный максимум
+    std::fill(data.begin(), data.end(), 1);
+    data[rows * cols - 1] = 99999;  // Известный максимум
+
+    input_data_.rows = rows;
+    input_data_.columns = cols;
+    input_data_.data = data;
+    expected_max_ = 99999;
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return input_data_ == output_data;
+    return (expected_max_ == output_data);
   }
 
   InType GetTestInputData() final {
     return input_data_;
   }
+
+ private:
+  InType input_data_{};
+  int expected_max_ = 0;
 };
 
 TEST_P(BuzulukskiyDMaxValueMatrixElementsPerfTests, RunPerfModes) {

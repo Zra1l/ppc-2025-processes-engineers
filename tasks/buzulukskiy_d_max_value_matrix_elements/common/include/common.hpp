@@ -16,7 +16,7 @@ struct Matrix {
 
 using InType = Matrix;
 using OutType = int;
-using TestType = std::tuple<int, int, std::string>;
+using TestType = std::tuple<int, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
 }  // namespace buzulukskiy_d_max_value_matrix_elements

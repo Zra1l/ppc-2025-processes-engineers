@@ -21,46 +21,58 @@
 namespace buzulukskiy_d_max_value_matrix_elements {
 
 class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
- public:
-  static std::string PrintTestParam(const TestType &test_param) {
-    return std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
-  }
-
  protected:
   void SetUp() override {
-    int width = -1;
-    int height = -1;
-    int channels = -1;
-    std::vector<uint8_t> img;
-    // Read image in RGB to ensure consistent channel count
-    {
-      std::string abs_path = ppc::util::GetAbsoluteTaskPath(PPC_ID_buzulukskiy_d_max_value_matrix_elements, "pic.jpg");
-      auto *data = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb);
-      if (data == nullptr) {
-        throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
-      }
-      channels = STBI_rgb;
-      img = std::vector<uint8_t>(data, data + (static_cast<ptrdiff_t>(width * height * channels)));
-      stbi_image_free(data);
-      if (std::cmp_not_equal(width, height)) {
-        throw std::runtime_error("width != height: ");
-      }
-    }
+    auto params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    test_case = std::get<0>(params);
 
-    TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = width - height + std::min(std::accumulate(img.begin(), img.end(), 0), channels);
+    switch (test_case) {
+      case 1:
+        input_data_.rows = 2;
+        input_data_.columns = 2;
+        input_data_.data = {1, 2, 3, 4};
+        expected_max = 4;
+        break;
+      case 2:
+        input_data_.rows = 3;
+        input_data_.columns = 2;
+        input_data_.data = {-1, -5, 8, -3, 0, 7};
+        expected_max = 8;
+        break;
+      case 3:
+        input_data_.rows = 1;
+        input_data_.columns = 1;
+        input_data_.data = {42};
+        expected_max = 42;
+        break;
+      case 4:
+        input_data_.rows = 2;
+        input_data_.columns = 3;
+        input_data_.data = {5, 5, 5, 5, 10, 5};
+        expected_max = 10;
+        break;
+      default:
+        throw std::runtime_error("Unknown test case");
+    }
   }
 
   bool CheckTestOutputData(OutType &output_data) final {
-    return (input_data_ == output_data);
+    return (expected_max == output_data);
   }
 
   InType GetTestInputData() final {
     return input_data_;
   }
 
+  public:
+  static std::string PrintTestParam(const TestType &test_param) {
+    return "TestCase_" + std::to_string(std::get<0>(test_param)) + "_" + std::get<1>(test_param);
+  }
+
  private:
-  InType input_data_ = 0;
+  InType input_data_{};
+  int expected_max = 0;
+  int test_case = 0;
 };
 
 namespace {
@@ -69,7 +81,8 @@ TEST_P(BuzulukskiyDMaxValueMatrixElementsTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 3> kTestParam = {std::make_tuple(3, "3"), std::make_tuple(5, "5"), std::make_tuple(7, "7")};
+const std::array<TestType, 4> kTestParam = {std::make_tuple(1, "2x2_matrix"), std::make_tuple(2, "with_negatives"),
+                                            std::make_tuple(3, "single_element"), std::make_tuple(4, "repeated_max")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsMPI, InType>(
                                                kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements),
@@ -77,11 +90,10 @@ const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<BuzulukskiyDMa
                                                kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
-
 const auto kPerfTestName =
     BuzulukskiyDMaxValueMatrixElementsTests::PrintFuncTestName<BuzulukskiyDMaxValueMatrixElementsTests>;
 
-INSTANTIATE_TEST_SUITE_P(PicMatrixTests, BuzulukskiyDMaxValueMatrixElementsTests, kGtestValues, kPerfTestName);
+INSTANTIATE_TEST_SUITE_P(MatrixMaxTests, BuzulukskiyDMaxValueMatrixElementsTests, kGtestValues, kPerfTestName);
 
 }  // namespace
 
