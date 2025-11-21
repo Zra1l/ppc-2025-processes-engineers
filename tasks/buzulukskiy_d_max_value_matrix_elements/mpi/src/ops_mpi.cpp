@@ -21,7 +21,7 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::ValidationImpl() {
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
 
-  if (matrix.empty() || rows <= 0 || columns <= 0 || 
+  if (matrix.empty() || rows <= 0 || columns <= 0 ||
       matrix.size() != static_cast<size_t>(rows) * static_cast<size_t>(columns)) {
     return false;
   }
@@ -37,7 +37,7 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::RunImpl() {
   const int rows = inputdata.rows;
   const int columns = inputdata.columns;
   const std::vector<int> &matrix = inputdata.data;
-  
+
   int rank = 0;
   int size = 1;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -68,7 +68,7 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::RunImpl() {
       local_max = std::max(local_max, recvbuf[index]);
     }
   }
-  
+
   int global_max = 0;
   MPI_Allreduce(&local_max, &global_max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
