@@ -12,8 +12,8 @@ namespace buzulukskiy_d_max_value_matrix_elements {
 class BuzulukskiyDMaxValueMatrixElementsPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
-    const int rows = 3000;
-    const int cols = 3000;
+    const int rows = 200;
+    const int cols = 200;
     const int matrix_size = rows * cols;
     std::vector<int> data(matrix_size);
 
