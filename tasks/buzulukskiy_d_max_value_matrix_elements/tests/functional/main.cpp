@@ -46,6 +46,30 @@ class BuzulukskiyDMaxValueMatrixElementsTests : public ppc::util::BaseRunFuncTes
         input_data_.data = {5, 5, 5, 5, 10, 5};
         expected_max_ = 10;
         break;
+      case 5:
+        input_data_.rows = 4;
+        input_data_.columns = 3;
+        input_data_.data = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        expected_max_ = 0;
+        break;
+      case 6:
+        input_data_.rows = 2;
+        input_data_.columns = 4;
+        input_data_.data = {-10, -20, -5, -1, -15, -25, -30, -2};
+        expected_max_ = -1;
+        break;
+      case 7:
+        input_data_.rows = 3;
+        input_data_.columns = 3;
+        input_data_.data = {100, 200, 150, 300, 250, 350, 400, 450, 500};
+        expected_max_ = 500;
+        break;
+      case 8:
+        input_data_.rows = 1;
+        input_data_.columns = 5;
+        input_data_.data = {7, 7, 7, 7, 7};
+        expected_max_ = 7;
+        break;
       default:
         throw std::runtime_error("Unknown test case");
     }
@@ -76,8 +100,10 @@ TEST_P(BuzulukskiyDMaxValueMatrixElementsTests, MatmulFromPic) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 4> kTestParam = {std::make_tuple(1, "2x2_matrix"), std::make_tuple(2, "with_negatives"),
-                                            std::make_tuple(3, "single_element"), std::make_tuple(4, "repeated_max")};
+const std::array<TestType, 8> kTestParam = {
+    std::make_tuple(1, "2x2_matrix"),       std::make_tuple(2, "with_negatives"), std::make_tuple(3, "single_element"),
+    std::make_tuple(4, "repeated_max"),     std::make_tuple(5, "all_zeros"),      std::make_tuple(6, "all_negatives"),
+    std::make_tuple(7, "3x3_large_values"), std::make_tuple(8, "1x5_same_values")};
 
 const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<BuzulukskiyDMaxValueMatrixElementsMPI, InType>(
                                                kTestParam, PPC_SETTINGS_buzulukskiy_d_max_value_matrix_elements),
