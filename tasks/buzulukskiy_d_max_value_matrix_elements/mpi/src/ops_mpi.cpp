@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <vector>
 
 #include "buzulukskiy_d_max_value_matrix_elements/common/include/common.hpp"
@@ -64,7 +65,7 @@ bool BuzulukskiyDMaxValueMatrixElementsMPI::RunImpl() {
   MPI_Scatterv(matrix.data(), counts_per_process.data(), displacements.data(), MPI_INT, recvbuf.data(),
                counts_per_process[rank], MPI_INT, 0, MPI_COMM_WORLD);
 
-  int local_max = 0;
+  int local_max = std::numeric_limits<int>::min();
   if (!recvbuf.empty()) {
     local_max = recvbuf[0];
     for (size_t index = 1; index < recvbuf.size(); ++index) {
