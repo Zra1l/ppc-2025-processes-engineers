@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -23,27 +22,22 @@ class BuzulukskyDBubbleSortFuncTests : public ppc::util::BaseRunFuncTests<InType
 
  protected:
   void SetUp() override {
-    const TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = std::get<0>(params);
+    const TestType params = std::get<static_cast<size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    input_ = std::get<0>(params);
   }
 
-  bool CheckTestOutputData(OutType &output_data) final {
-    OutType expected = CalcExpected(input_data_);
-    return output_data == expected;
+  bool CheckTestOutputData(OutType &output) final {
+    auto expected = input_;
+    std::sort(expected.begin(), expected.end());
+    return output == expected;
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_;
   }
 
  private:
-  InType input_data_;
-
-  static OutType CalcExpected(const InType &data) {
-    OutType sorted = data;
-    std::sort(sorted.begin(), sorted.end());
-    return sorted;
-  }
+  InType input_;
 };
 
 namespace {
@@ -53,25 +47,25 @@ TEST_P(BuzulukskyDBubbleSortFuncTests, BubbleSortTests) {
 }
 
 const std::array<TestType, 9> kTestParams = {
-    TestType{std::vector<int>{}, "empty"},
-    TestType{std::vector<int>{3}, "one_elem"},
-    TestType{std::vector<int>{3, 5, 21, 1, 4}, "random_5"},
-    TestType{std::vector<int>{1, 2, 3, 4, 5}, "sorted"},
-    TestType{std::vector<int>{-1, 100, 0, -50, 50}, "negative"},
-    TestType{std::vector<int>{1, 1, 1, 1}, "same_numbers"},
-    TestType{std::vector<int>{1, 3, 2, 5, 8, 7, 4, 6, 9, 0}, "random_10"},
-    TestType{std::vector<int>{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "reverse"},
-    TestType{std::vector<int>{1000, -1000, 500, -500, 250, -250, 125, -125}, "large_range"},
+    TestType{{}, "empty"},
+    TestType{{5}, "one_elem"},
+    TestType{{3, 5, 21, 1, 4}, "random_5"},
+    TestType{{1, 2, 3, 4, 5}, "sorted"},
+    TestType{{-1, 100, 0, -50, 50}, "negative"},
+    TestType{{1, 1, 1, 1}, "same_numbers"},
+    TestType{{1, 3, 2, 5, 8, 7, 4, 6, 9, 0}, "random_10"},
+    TestType{{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "reverse"},
+    TestType{{1000, -1000, 500, -500}, "range"},
 };
 
-const auto kTaskList =
-    std::tuple_cat(ppc::util::AddFuncTask<BuzulukskyDBubbleSortMPI, InType>(kTestParams, "buzuluksky_d_bubble_sort"),
-                   ppc::util::AddFuncTask<BuzulukskyDBubbleSortSEQ, InType>(kTestParams, "buzuluksky_d_bubble_sort"));
+const auto kTaskList = std::tuple_cat(
+    ppc::util::AddFuncTask<BuzulukskyDBubbleSortMPI, InType>(kTestParams, PPC_SETTINGS_buzuluksky_d_bubble_sort),
+    ppc::util::AddFuncTask<BuzulukskyDBubbleSortSEQ, InType>(kTestParams, PPC_SETTINGS_buzuluksky_d_bubble_sort));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTaskList);
+const auto kTestName = BuzulukskyDBubbleSortFuncTests::PrintFuncTestName<BuzulukskyDBubbleSortFuncTests>;
 
-INSTANTIATE_TEST_SUITE_P(BubbleSortTests, BuzulukskyDBubbleSortFuncTests, kGtestValues,
-                         BuzulukskyDBubbleSortFuncTests::PrintFuncTestName<BuzulukskyDBubbleSortFuncTests>);
+INSTANTIATE_TEST_SUITE_P(BubbleSortTests, BuzulukskyDBubbleSortFuncTests, kGtestValues, kTestName);
 
 }  // namespace
 

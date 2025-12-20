@@ -29,7 +29,7 @@ class BubbleSortPerfTest : public ::testing::Test {
     size_ = 5000;
     input_.resize(size_);
 
-    for (size_t i = 0; i < size_; i++) {
+    for (size_t i = 0; i < size_; ++i) {
       input_[i] = static_cast<int>(i);
       if (i % 100 == 0) {
         input_[i] = static_cast<int>((i * 37) % size_);
@@ -49,37 +49,37 @@ class BubbleSortPerfTest : public ::testing::Test {
 TEST_F(BubbleSortPerfTest, SeqPerformance) {
   BuzulukskyDBubbleSortSEQ task(input_);
 
-  auto start = std::chrono::high_resolution_clock::now();
+  const auto start = std::chrono::high_resolution_clock::now();
 
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
   EXPECT_TRUE(task.Run());
   EXPECT_TRUE(task.PostProcessing());
 
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  auto result = task.GetOutput();
+  const auto result = task.GetOutput();
   EXPECT_TRUE(IsSorted(result));
-  std::cout << "SEQ execution time: " << duration.count() << " ms" << std::endl;
+  std::cout << "SEQ execution time: " << duration.count() << " ms\n";
 }
 
 TEST_F(BubbleSortPerfTest, MpiPerformance) {
   BuzulukskyDBubbleSortMPI task(input_);
 
-  auto start = std::chrono::high_resolution_clock::now();
+  const auto start = std::chrono::high_resolution_clock::now();
 
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
   EXPECT_TRUE(task.Run());
   EXPECT_TRUE(task.PostProcessing());
 
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  const auto end = std::chrono::high_resolution_clock::now();
+  const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  auto result = task.GetOutput();
+  const auto result = task.GetOutput();
   EXPECT_TRUE(IsSorted(result));
-  std::cout << "MPI execution time: " << duration.count() << " ms" << std::endl;
+  std::cout << "MPI execution time: " << duration.count() << " ms\n";
 }
 
 }  // namespace buzuluksky_d_bubble_sort

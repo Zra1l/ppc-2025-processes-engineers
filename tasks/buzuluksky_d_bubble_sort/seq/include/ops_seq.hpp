@@ -10,6 +10,7 @@ class BuzulukskyDBubbleSortSEQ : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;
   }
+
   explicit BuzulukskyDBubbleSortSEQ(const InType &in);
 
  private:

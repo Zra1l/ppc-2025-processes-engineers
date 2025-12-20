@@ -1,104 +1,56 @@
 #include "buzuluksky_d_bubble_sort/mpi/include/ops_mpi.hpp"
 
+#include <mpi.h>
+
 #include <algorithm>
-#include <cstddef>
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
-#include "mpi.h"
 
 namespace buzuluksky_d_bubble_sort {
 
 namespace {
 
-void LocalOddEvenSort(std::vector<int> &array) {
-  if (array.empty()) {
+void LocalOddEvenSort(std::vector<int> &data) {
+  bool sorted = false;
+  while (!sorted) {
+    sorted = true;
+    for (size_t i = 0; i + 1 < data.size(); i += 2) {
+      if (data[i] > data[i + 1]) {
+        std::swap(data[i], data[i + 1]);
+        sorted = false;
+      }
+    }
+    for (size_t i = 1; i + 1 < data.size(); i += 2) {
+      if (data[i] > data[i + 1]) {
+        std::swap(data[i], data[i + 1]);
+        sorted = false;
+      }
+    }
+  }
+}
+
+int PartnerRank(int rank, int phase) {
+  return (phase % 2 == 0) ? ((rank % 2 == 0) ? rank + 1 : rank - 1) : ((rank % 2 == 0) ? rank - 1 : rank + 1);
+}
+
+void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const std::vector<int> &counts) {
+  if (partner < 0 || partner >= static_cast<int>(counts.size()) || counts[rank] == 0 || counts[partner] == 0) {
     return;
   }
 
-  const size_t n = array.size();
-  bool sorted = false;
+  std::vector<int> remote(static_cast<size_t>(counts[partner]));
 
-  for (size_t pass = 0; pass < n && !sorted; ++pass) {
-    sorted = true;
+  MPI_Sendrecv(local.data(), static_cast<int>(local.size()), MPI_INT, partner, 0, remote.data(),
+               static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    for (size_t i = 0; i + 1 < n; i += 2) {
-      if (array[i] > array[i + 1]) {
-        std::swap(array[i], array[i + 1]);
-        sorted = false;
-      }
-    }
-
-    for (size_t i = 1; i + 1 < n; i += 2) {
-      if (array[i] > array[i + 1]) {
-        std::swap(array[i], array[i + 1]);
-        sorted = false;
-      }
-    }
-
-    if (sorted) {
-      break;
-    }
-  }
-}
-
-int GetCommunicationPartner(int rank, int phase, int proc_count) {
-  if (phase % 2 == 0) {
-    if (rank % 2 == 0 && rank + 1 < proc_count) {
-      return rank + 1;
-    }
-    if (rank % 2 != 0 && rank - 1 >= 0) {
-      return rank - 1;
-    }
-  } else {
-    if (rank % 2 == 0 && rank - 1 >= 0) {
-      return rank - 1;
-    }
-    if (rank % 2 != 0 && rank + 1 < proc_count) {
-      return rank + 1;
-    }
-  }
-  return -1;
-}
-
-std::vector<int> ExchangeWithPartner(int partner, const std::vector<int> &local) {
-  int my_size = static_cast<int>(local.size());
-  int partner_size = 0;
-
-  MPI_Sendrecv(&my_size, 1, MPI_INT, partner, 0, &partner_size, 1, MPI_INT, partner, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-
-  std::vector<int> partner_data(partner_size);
-  MPI_Sendrecv(local.data(), my_size, MPI_INT, partner, 1, partner_data.data(), partner_size, MPI_INT, partner, 1,
-               MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-  return partner_data;
-}
-
-std::vector<int> MergeAndSelect(int rank, int partner, const std::vector<int> &local, const std::vector<int> &remote) {
   std::vector<int> merged(local.size() + remote.size());
   std::merge(local.begin(), local.end(), remote.begin(), remote.end(), merged.begin());
 
-  std::vector<int> result(local.size());
   if (rank < partner) {
-    std::copy_n(merged.begin(), local.size(), result.begin());
+    std::copy(merged.begin(), merged.begin() + local.size(), local.begin());
   } else {
-    std::copy_n(merged.end() - static_cast<int>(local.size()), local.size(), result.begin());
-  }
-
-  return result;
-}
-
-void PerformOddEvenPhases(int rank, int proc_count, std::vector<int> &local) {
-  for (int phase = 0; phase < proc_count; ++phase) {
-    int partner = GetCommunicationPartner(rank, phase, proc_count);
-
-    if (partner != -1) {
-      std::vector<int> partner_data = ExchangeWithPartner(partner, local);
-      local = MergeAndSelect(rank, partner, local, partner_data);
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::copy(merged.end() - local.size(), merged.end(), local.begin());
   }
 }
 
@@ -107,6 +59,7 @@ void PerformOddEvenPhases(int rank, int proc_count, std::vector<int> &local) {
 BuzulukskyDBubbleSortMPI::BuzulukskyDBubbleSortMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
+  static_cast<void>(GetOutput());
 }
 
 bool BuzulukskyDBubbleSortMPI::ValidationImpl() {
@@ -119,78 +72,58 @@ bool BuzulukskyDBubbleSortMPI::PreProcessingImpl() {
 
 bool BuzulukskyDBubbleSortMPI::RunImpl() {
   int rank = 0;
-  int proc_count = 0;
+  int proc_count = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
 
   const auto &input = GetInput();
-  int total_size = static_cast<int>(input.size());
+  const int n = static_cast<int>(input.size());
 
-  if (total_size == 0) {
-    GetOutput() = std::vector<int>();
-    return true;
-  }
-
-  if (total_size == 1) {
-    GetOutput() = input;
-    return true;
-  }
-
-  int working_procs = std::min(proc_count, total_size);
-
-  if (rank >= working_procs) {
-    if (rank == 0) {
-      GetOutput() = std::vector<int>();
-    } else {
-      GetOutput() = std::vector<int>();
-    }
-    return true;
-  }
-
-  std::vector<int> counts(working_procs, 0);
-  std::vector<int> offsets(working_procs, 0);
+  std::vector<int> counts(static_cast<size_t>(proc_count));
+  std::vector<int> displs(static_cast<size_t>(proc_count));
 
   if (rank == 0) {
-    int base = total_size / working_procs;
-    int extra = total_size % working_procs;
+    int base = n / proc_count;
+    int rem = n % proc_count;
     int offset = 0;
-
-    for (int i = 0; i < working_procs; ++i) {
-      counts[i] = base + (i < extra ? 1 : 0);
-      offsets[i] = offset;
+    for (int i = 0; i < proc_count; ++i) {
+      counts[i] = base + (i < rem ? 1 : 0);
+      displs[i] = offset;
       offset += counts[i];
     }
   }
 
-  MPI_Bcast(counts.data(), working_procs, MPI_INT, 0, MPI_COMM_WORLD);
-  MPI_Bcast(offsets.data(), working_procs, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(counts.data(), proc_count, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(displs.data(), proc_count, MPI_INT, 0, MPI_COMM_WORLD);
 
-  std::vector<int> local_data(counts[rank]);
+  std::vector<int> local(static_cast<size_t>(counts[rank]));
 
-  if (total_size > 0) {
-    MPI_Scatterv(rank == 0 ? input.data() : nullptr, counts.data(), offsets.data(), MPI_INT, local_data.data(),
-                 counts[rank], MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(input.data(), counts.data(), displs.data(), MPI_INT, local.data(), counts[rank], MPI_INT, 0,
+               MPI_COMM_WORLD);
+
+  LocalOddEvenSort(local);
+
+  for (int phase = 0; phase < proc_count + 1; ++phase) {
+    int partner = PartnerRank(rank, phase);
+    ExchangeWithNeighbor(local, rank, partner, counts);
   }
-
-  LocalOddEvenSort(local_data);
-
-  PerformOddEvenPhases(rank, working_procs, local_data);
 
   std::vector<int> result;
   if (rank == 0) {
-    result.resize(total_size);
+    result.resize(static_cast<size_t>(n));
   }
 
-  if (total_size > 0) {
-    MPI_Gatherv(local_data.data(), static_cast<int>(local_data.size()), MPI_INT, rank == 0 ? result.data() : nullptr,
-                counts.data(), offsets.data(), MPI_INT, 0, MPI_COMM_WORLD);
-  }
+  MPI_Gatherv(local.data(), counts[rank], MPI_INT, result.data(), counts.data(), displs.data(), MPI_INT, 0,
+              MPI_COMM_WORLD);
 
   if (rank == 0) {
-    GetOutput() = std::move(result);
+    GetOutput() = result;
   } else {
-    GetOutput() = std::vector<int>();
+    GetOutput().resize(static_cast<size_t>(n));
   }
+
+  MPI_Bcast(GetOutput().data(), n, MPI_INT, 0, MPI_COMM_WORLD);
+
   return true;
 }
 

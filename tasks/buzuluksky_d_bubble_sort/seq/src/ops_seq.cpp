@@ -23,11 +23,12 @@ bool BuzulukskyDBubbleSortSEQ::PreProcessingImpl() {
 }
 
 bool BuzulukskyDBubbleSortSEQ::RunImpl() {
-  auto &arr = GetInput();
-  const size_t n = arr.size();
+  const auto &input = GetInput();
+  auto arr = input;
 
+  const size_t n = arr.size();
   if (n <= 1) {
-    GetOutput() = std::move(arr);
+    GetOutput() = arr;
     return true;
   }
 
@@ -54,7 +55,7 @@ bool BuzulukskyDBubbleSortSEQ::RunImpl() {
     }
   }
 
-  GetOutput() = std::move(arr);
+  GetOutput() = arr;
   return true;
 }
 
