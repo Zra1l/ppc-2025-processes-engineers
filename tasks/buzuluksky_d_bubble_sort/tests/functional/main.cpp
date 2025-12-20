@@ -47,15 +47,15 @@ TEST_P(BuzulukskyDBubbleSortFuncTests, BubbleSortTests) {
 }
 
 const std::array<TestType, 9> kTestParams = {
-    TestType{{}, "empty"},
-    TestType{{5}, "one_elem"},
-    TestType{{3, 5, 21, 1, 4}, "random_5"},
-    TestType{{1, 2, 3, 4, 5}, "sorted"},
-    TestType{{-1, 100, 0, -50, 50}, "negative"},
-    TestType{{1, 1, 1, 1}, "same_numbers"},
-    TestType{{1, 3, 2, 5, 8, 7, 4, 6, 9, 0}, "random_10"},
-    TestType{{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "reverse"},
-    TestType{{1000, -1000, 500, -500}, "range"},
+    TestType{std::vector<int>{}, "empty"},
+    TestType{std::vector<int>{3}, "one_elem"},
+    TestType{std::vector<int>{3, 5, 21, 1, 4}, "random_5"},
+    TestType{std::vector<int>{1, 2, 3, 4, 5}, "sorted"},
+    TestType{std::vector<int>{-1, 100, 0, -50, 50}, "negative"},
+    TestType{std::vector<int>{1, 1, 1, 1}, "same_numbers"},
+    TestType{std::vector<int>{1, 3, 2, 5, 8, 7, 4, 6, 9, 0}, "random_10"},
+    TestType{std::vector<int>{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, "reverse"},
+    TestType{std::vector<int>{1000, -1000, 500, -500, 250, -250, 125, -125}, "large_range"},
 };
 
 const auto kTaskList = std::tuple_cat(
