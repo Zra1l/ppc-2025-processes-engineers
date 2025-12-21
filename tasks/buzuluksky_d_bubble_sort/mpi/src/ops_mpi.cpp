@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <ranges>
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
@@ -60,7 +61,7 @@ void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const 
                static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   std::vector<int> merged(local.size() + remote.size());
-  std::merge(local.begin(), local.end(), remote.begin(), remote.end(), merged.begin());
+  std::ranges::merge(local, remote, merged.begin());
 
   const std::size_t local_size = local.size();
   if (rank < partner) {
