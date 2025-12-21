@@ -1,10 +1,12 @@
+#pragma once
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <iostream>
 #include <vector>
 
-#include "buzuluksky_d_bubble_sort/common/include/common.hpp"
 #include "buzuluksky_d_bubble_sort/mpi/include/ops_mpi.hpp"
 #include "buzuluksky_d_bubble_sort/seq/include/ops_seq.hpp"
 
@@ -25,10 +27,10 @@ static bool IsSorted(const std::vector<int> &arr) {
 
 class BubbleSortPerfTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    size_ = 5000;
-    input_.resize(size_);
+  BubbleSortPerfTest() : size_(5000) {}
 
+  void SetUp() override {
+    input_.resize(size_);
     for (size_t i = 0; i < size_; ++i) {
       input_[i] = static_cast<int>(i);
       if (i % 100 == 0) {
