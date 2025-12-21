@@ -2,8 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
-#include <ranges>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -30,7 +28,7 @@ class BuzulukskyDBubbleSortFuncTests : public ppc::util::BaseRunFuncTests<InType
 
   bool CheckTestOutputData(OutType &output) final {
     auto expected = input_;
-    std::sort(expected.begin(), expected.end());
+    std::ranges::sort(expected);
     return output == expected;
   }
 
@@ -70,5 +68,4 @@ const auto kTestName = BuzulukskyDBubbleSortFuncTests::PrintFuncTestName<Buzuluk
 INSTANTIATE_TEST_SUITE_P(BubbleSortTests, BuzulukskyDBubbleSortFuncTests, kGtestValues, kTestName);
 
 }  // namespace
-
 }  // namespace buzuluksky_d_bubble_sort

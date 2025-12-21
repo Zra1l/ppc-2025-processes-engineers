@@ -1,8 +1,9 @@
 #include "buzuluksky_d_bubble_sort/seq/include/ops_seq.hpp"
 
 #include <algorithm>
-#include <cstddef>
-#include <ranges>
+#include <vector>
+
+#include "buzuluksky_d_bubble_sort/common/include/common.hpp"
 
 namespace buzuluksky_d_bubble_sort {
 
@@ -15,7 +16,6 @@ BuzulukskyDBubbleSortSEQ::BuzulukskyDBubbleSortSEQ(const InType &input) {
 bool BuzulukskyDBubbleSortSEQ::ValidationImpl() {
   return true;
 }
-
 bool BuzulukskyDBubbleSortSEQ::PreProcessingImpl() {
   return true;
 }

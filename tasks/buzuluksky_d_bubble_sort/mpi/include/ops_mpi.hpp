@@ -1,8 +1,7 @@
 #pragma once
 
-#include <cstddef>
-
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
+#include "task/include/task.hpp"
 
 namespace buzuluksky_d_bubble_sort {
 
