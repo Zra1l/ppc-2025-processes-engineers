@@ -1,6 +1,7 @@
 #include "buzuluksky_d_bubble_sort/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
@@ -23,7 +24,6 @@ bool BuzulukskyDBubbleSortSEQ::PreProcessingImpl() {
 bool BuzulukskyDBubbleSortSEQ::RunImpl() {
   auto data = GetInput();
   const std::size_t n = data.size();
-
   if (n <= 1U) {
     GetOutput() = data;
     return true;
@@ -32,14 +32,12 @@ bool BuzulukskyDBubbleSortSEQ::RunImpl() {
   bool sorted = false;
   for (std::size_t pass = 0; pass < n && !sorted; ++pass) {
     sorted = true;
-
     for (std::size_t i = 0; i + 1 < n; i += 2) {
       if (data[i] > data[i + 1]) {
         std::swap(data[i], data[i + 1]);
         sorted = false;
       }
     }
-
     for (std::size_t i = 1; i + 1 < n; i += 2) {
       if (data[i] > data[i + 1]) {
         std::swap(data[i], data[i + 1]);

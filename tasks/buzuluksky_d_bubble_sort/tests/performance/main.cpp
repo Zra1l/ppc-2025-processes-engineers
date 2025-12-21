@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <iostream>
 #include <vector>
 
@@ -24,7 +25,8 @@ static bool IsSorted(const std::vector<int> &arr) {
 
 class BubbleSortPerfTest : public ::testing::Test {
  protected:
-  BubbleSortPerfTest() : size{5000} {}
+  std::size_t size{5000};
+  std::vector<int> input;
 
   void SetUp() override {
     input.resize(size);
@@ -34,14 +36,12 @@ class BubbleSortPerfTest : public ::testing::Test {
         input[i] = static_cast<int>((i * 37) % size);
       }
     }
+
     if (size > 10) {
       std::swap(input[0], input[size - 1]);
       std::swap(input[size / 4], input[size / 2]);
     }
   }
-
-  std::vector<int> input;
-  std::size_t size;
 };
 
 TEST_F(BubbleSortPerfTest, SeqPerformance) {
@@ -57,7 +57,7 @@ TEST_F(BubbleSortPerfTest, SeqPerformance) {
   auto end = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  auto result = task.GetOutput();
+  const auto &result = task.GetOutput();
   EXPECT_TRUE(IsSorted(result));
   std::cout << "SEQ execution time: " << duration.count() << " ms\n";
 }
@@ -75,7 +75,7 @@ TEST_F(BubbleSortPerfTest, MpiPerformance) {
   auto end = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-  auto result = task.GetOutput();
+  const auto &result = task.GetOutput();
   EXPECT_TRUE(IsSorted(result));
   std::cout << "MPI execution time: " << duration.count() << " ms\n";
 }

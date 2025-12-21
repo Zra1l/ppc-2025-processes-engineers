@@ -3,6 +3,8 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <ranges>
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
@@ -36,10 +38,15 @@ int PartnerRank(int rank, int phase) {
   const bool even_rank = (rank % 2) == 0;
 
   if (even_phase) {
-    return even_rank ? rank + 1 : rank - 1;
-  } else {
-    return even_rank ? rank - 1 : rank + 1;
+    if (even_rank) {
+      return rank + 1;
+    }
+    return rank - 1;
   }
+  if (even_rank) {
+    return rank - 1;
+  }
+  return rank + 1;
 }
 
 void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const std::vector<int> &counts) {
@@ -53,7 +60,7 @@ void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const 
                static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   std::vector<int> merged(local.size() + remote.size());
-  std::merge(local.begin(), local.end(), remote.begin(), remote.end(), merged.begin());
+  std::ranges::merge(local, remote, merged.begin());
 
   const std::size_t local_size = local.size();
   if (rank < partner) {
@@ -79,8 +86,7 @@ bool BuzulukskyDBubbleSortMPI::PreProcessingImpl() {
 }
 
 bool BuzulukskyDBubbleSortMPI::RunImpl() {
-  int rank = 0;
-  int proc_count = 1;
+  int rank = 0, proc_count = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
 
@@ -123,7 +129,6 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
   if (rank == 0) {
     GetOutput() = result;
   }
-
   if (n > 0) {
     MPI_Bcast(GetOutput().data(), n, MPI_INT, 0, MPI_COMM_WORLD);
   }
