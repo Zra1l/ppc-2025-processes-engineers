@@ -2,9 +2,8 @@
 
 #include <mpi.h>
 
-#include <algorithm>
-#include <cstddef>
-#include <ranges>
+#include <algorithm>  // std::ranges::merge, std::swap, std::copy_n
+#include <cstddef>    // std::size_t, std::ptrdiff_t
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
@@ -19,12 +18,14 @@ void LocalOddEvenSort(std::vector<int> &data) {
 
   while (!sorted) {
     sorted = true;
+
     for (std::size_t i = 0; i + 1 < n; i += 2) {
       if (data[i] > data[i + 1]) {
         std::swap(data[i], data[i + 1]);
         sorted = false;
       }
     }
+
     for (std::size_t i = 1; i + 1 < n; i += 2) {
       if (data[i] > data[i + 1]) {
         std::swap(data[i], data[i + 1]);
@@ -39,15 +40,10 @@ int PartnerRank(int rank, int phase) {
   const bool even_rank = (rank % 2) == 0;
 
   if (even_phase) {
-    if (even_rank) {
-      return rank + 1;
-    }
-    return rank - 1;
+    return even_rank ? rank + 1 : rank - 1;
   }
-  if (even_rank) {
-    return rank - 1;
-  }
-  return rank + 1;
+
+  return even_rank ? rank - 1 : rank + 1;
 }
 
 void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const std::vector<int> &counts) {
@@ -57,6 +53,7 @@ void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const 
   }
 
   std::vector<int> remote(static_cast<std::size_t>(counts[partner]));
+
   MPI_Sendrecv(local.data(), static_cast<int>(local.size()), MPI_INT, partner, 0, remote.data(),
                static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
@@ -90,6 +87,7 @@ bool BuzulukskyDBubbleSortMPI::PreProcessingImpl() {
 bool BuzulukskyDBubbleSortMPI::RunImpl() {
   int rank = 0;
   int proc_count = 1;
+
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
 
@@ -103,6 +101,7 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
     int offset = 0;
     const int base = n / proc_count;
     const int remainder = n % proc_count;
+
     for (int i = 0; i < proc_count; ++i) {
       counts[i] = base + (i < remainder ? 1 : 0);
       displs[i] = offset;
@@ -114,6 +113,7 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
   MPI_Bcast(displs.data(), proc_count, MPI_INT, 0, MPI_COMM_WORLD);
 
   std::vector<int> local(static_cast<std::size_t>(counts[rank]));
+
   MPI_Scatterv(rank == 0 ? input.data() : nullptr, counts.data(), displs.data(), MPI_INT, local.data(), counts[rank],
                MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -125,6 +125,7 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
   }
 
   std::vector<int> result(static_cast<std::size_t>(n));
+
   MPI_Gatherv(local.data(), counts[rank], MPI_INT, rank == 0 ? result.data() : nullptr, counts.data(), displs.data(),
               MPI_INT, 0, MPI_COMM_WORLD);
 
