@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <ranges>
 #include <vector>
 
 #include "buzuluksky_d_bubble_sort/common/include/common.hpp"
@@ -16,6 +15,7 @@ namespace {
 void LocalOddEvenSort(std::vector<int> &data) {
   bool sorted = false;
   const std::size_t n = data.size();
+
   while (!sorted) {
     sorted = true;
     for (std::size_t i = 0; i + 1 < n; i += 2) {
@@ -60,7 +60,7 @@ void ExchangeWithNeighbor(std::vector<int> &local, int rank, int partner, const 
                static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   std::vector<int> merged(local.size() + remote.size());
-  std::ranges::merge(local, remote, merged.begin());
+  std::merge(local.begin(), local.end(), remote.begin(), remote.end(), merged.begin());
 
   const std::size_t local_size = local.size();
   if (rank < partner) {
@@ -81,12 +81,14 @@ BuzulukskyDBubbleSortMPI::BuzulukskyDBubbleSortMPI(const InType &input) {
 bool BuzulukskyDBubbleSortMPI::ValidationImpl() {
   return true;
 }
+
 bool BuzulukskyDBubbleSortMPI::PreProcessingImpl() {
   return true;
 }
 
 bool BuzulukskyDBubbleSortMPI::RunImpl() {
-  int rank = 0, proc_count = 1;
+  int rank = 0;
+  int proc_count = 1;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
 
@@ -97,9 +99,9 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
   std::vector<int> displs(proc_count, 0);
 
   if (rank == 0) {
+    int offset = 0;
     const int base = n / proc_count;
     const int remainder = n % proc_count;
-    int offset = 0;
     for (int i = 0; i < proc_count; ++i) {
       counts[i] = base + (i < remainder ? 1 : 0);
       displs[i] = offset;
@@ -129,6 +131,7 @@ bool BuzulukskyDBubbleSortMPI::RunImpl() {
   if (rank == 0) {
     GetOutput() = result;
   }
+
   if (n > 0) {
     MPI_Bcast(GetOutput().data(), n, MPI_INT, 0, MPI_COMM_WORLD);
   }
