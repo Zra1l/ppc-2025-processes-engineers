@@ -48,7 +48,7 @@ TEST_P(BuzulukskyDBubbleSortFuncTests, BubbleSortTests) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 9> kTestParams = {
+const std::array<TestType, 9> kTestParams{
     TestType{std::vector<int>{}, "empty"},
     TestType{std::vector<int>{3}, "one_elem"},
     TestType{std::vector<int>{3, 5, 21, 1, 4}, "random_5"},

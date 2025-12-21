@@ -1,4 +1,3 @@
-#pragma once
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -17,7 +16,7 @@ static bool IsSorted(const std::vector<int> &arr) {
     return true;
   }
 
-  for (size_t i = 0; i < arr.size() - 1; ++i) {
+  for (std::size_t i = 0; i + 1 < arr.size(); ++i) {
     if (arr[i] > arr[i + 1]) {
       return false;
     }
@@ -31,7 +30,7 @@ class BubbleSortPerfTest : public ::testing::Test {
 
   void SetUp() override {
     input_.resize(size_);
-    for (size_t i = 0; i < size_; ++i) {
+    for (std::size_t i = 0; i < size_; ++i) {
       input_[i] = static_cast<int>(i);
       if (i % 100 == 0) {
         input_[i] = static_cast<int>((i * 37) % size_);
@@ -45,7 +44,7 @@ class BubbleSortPerfTest : public ::testing::Test {
   }
 
   std::vector<int> input_;
-  size_t size_;
+  std::size_t size_;
 };
 
 TEST_F(BubbleSortPerfTest, SeqPerformance) {
