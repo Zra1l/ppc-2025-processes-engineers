@@ -31,7 +31,7 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
   }
 
  private:
-  static constexpr std::size_t kCount = 5000;
+  static constexpr std::size_t kCount = 100000;
   InType input_data_;
 };
 
