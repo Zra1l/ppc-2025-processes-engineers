@@ -149,9 +149,9 @@ bool BuzulukskiyDSortBatcherSEQ::RunImpl() {
   }
 
   if (blocks.size() == 1 && !blocks[0].empty()) {
-    GetOutput().swap(blocks[0]);
+    GetOutput() = std::vector<int>(blocks[0].begin(), blocks[0].end());
   } else {
-    GetOutput() = InType();
+    GetOutput() = std::vector<int>();
   }
 
   return true;
