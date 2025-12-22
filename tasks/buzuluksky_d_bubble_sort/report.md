@@ -15,6 +15,7 @@ constraints            -> N >= 0, все элементы - целые числ�
 ## 3. Baseline Algorithm (Sequential)
 Describe the base algorithm with enough detail to reproduce.
 
+Основной алгоритм сортировки
 ```cpp
   bool sorted = false;
   for (size_t pass = 0; pass < n && !sorted; ++pass) {
@@ -39,6 +40,11 @@ Describe the base algorithm with enough detail to reproduce.
     }
   }
 ```
+
+Про алгоритм:
+ Алгоритм легко поддаётся паралелизму, алгоритм обладает стабильной работой,
+ Алгоритм может эффективно показывать себя при большом объёме данных, но только при паралелизме(при слишком большом объёме данных проседает)
+
 
 ## 4. Parallelization Scheme
 data distribution:
@@ -135,7 +141,7 @@ using BaseTask = ppc::task::Task<InType, OutType>;
 Все тесты на коретность были успешно пройдены, тестов было 9
 
 ### 7.2 Performance
-Present time, speedup and efficiency. Example table:
+ Таблица перформенс тестов:
 
 | Mode        | processes | AvgTime(s) | Speedup | Efficiency |
 |-------------|-----------|------------|---------|------------|
