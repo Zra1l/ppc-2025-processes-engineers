@@ -11,14 +11,12 @@
 
 namespace buzulukskiy_d_sort_batcher {
 
-class BuzulukskiyDSortBatcherPerfTests
-    : public ppc::util::BaseRunPerfTests<InType, OutType> {
+class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
  protected:
   void SetUp() override {
     input_data_.resize(kCount);
     for (std::size_t i = 0; i < kCount; ++i) {
-      input_data_[i] =
-          static_cast<int>((kCount - i) * 7 % 10000 - 5000);
+      input_data_[i] = static_cast<int>((kCount - i) * 7 % 10000 - 5000);
     }
   }
 
@@ -26,7 +24,7 @@ class BuzulukskiyDSortBatcherPerfTests
     return input_data_;
   }
 
-  bool CheckTestOutputData(OutType& output) final {
+  bool CheckTestOutputData(OutType &output) final {
     std::vector<int> expected = input_data_;
     std::sort(expected.begin(), expected.end());
     return output == expected;
@@ -42,27 +40,17 @@ TEST_P(BuzulukskiyDSortBatcherPerfTests, RunPerf) {
   ExecuteTest(GetParam());
   const auto end = std::chrono::high_resolution_clock::now();
 
-  const auto ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-          .count();
+  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
   std::cout << "Execution time: " << ms << " ms\n";
 }
 
-const auto kPerfTasks =
-    ppc::util::MakeAllPerfTasks<
-        InType,
-        BuzulukskiyDSortBatcherSEQ,
-        BuzulukskiyDSortBatcherMPI>(
-        PPC_SETTINGS_buzulukskiy_d_sort_batcher);
+const auto kPerfTasks = ppc::util::MakeAllPerfTasks<InType, BuzulukskiyDSortBatcherSEQ, BuzulukskiyDSortBatcherMPI>(
+    PPC_SETTINGS_buzulukskiy_d_sort_batcher);
 
-const auto kPerfValues =
-    ppc::util::TupleToGTestValues(kPerfTasks);
+const auto kPerfValues = ppc::util::TupleToGTestValues(kPerfTasks);
 
-INSTANTIATE_TEST_SUITE_P(
-    SortBatcherPerfTests,
-    BuzulukskiyDSortBatcherPerfTests,
-    kPerfValues,
-    BuzulukskiyDSortBatcherPerfTests::CustomPerfTestName);
+INSTANTIATE_TEST_SUITE_P(SortBatcherPerfTests, BuzulukskiyDSortBatcherPerfTests, kPerfValues,
+                         BuzulukskiyDSortBatcherPerfTests::CustomPerfTestName);
 
 }  // namespace buzulukskiy_d_sort_batcher

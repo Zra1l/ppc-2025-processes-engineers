@@ -1,17 +1,18 @@
 #pragma once
 
-#include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
 #include <vector>
+
+#include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
 
 namespace buzulukskiy_d_sort_batcher {
 
 class BuzulukskiyDSortBatcherSEQ : public BaseTask {
  public:
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
-      return ppc::task::TypeOfTask::kSEQ;
+    return ppc::task::TypeOfTask::kSEQ;
   }
 
-  explicit BuzulukskiyDSortBatcherSEQ(const InType& in);
+  explicit BuzulukskiyDSortBatcherSEQ(const InType &in);
 
  private:
   bool ValidationImpl() override;

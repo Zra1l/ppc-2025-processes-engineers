@@ -13,13 +13,10 @@
 
 namespace buzulukskiy_d_sort_batcher {
 
-class BuzulukskiyDSortBatcherFuncTests
-    : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  protected:
   void SetUp() override {
-    const TestType& param =
-        std::get<static_cast<std::size_t>(
-            ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const TestType &param = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     input_data_ = std::get<0>(param);
   }
 
@@ -27,7 +24,7 @@ class BuzulukskiyDSortBatcherFuncTests
     return input_data_;
   }
 
-  bool CheckTestOutputData(OutType& output) final {
+  bool CheckTestOutputData(OutType &output) final {
     std::vector<int> expected = input_data_;
     std::sort(expected.begin(), expected.end());
     return output == expected;
@@ -52,13 +49,9 @@ const std::array<TestType, 10> kTestParams = {
     TestType{{4, -2, 7, 0, -2, 9, 1}, "uneven_distribution"},
 };
 
-const auto kTasks =
-    std::tuple_cat(
-        ppc::util::AddFuncTask<BuzulukskiyDSortBatcherSEQ, InType>(
-            kTestParams, PPC_SETTINGS_buzulukskiy_d_sort_batcher),
-        ppc::util::AddFuncTask<BuzulukskiyDSortBatcherMPI, InType>(
-            kTestParams, PPC_SETTINGS_buzulukskiy_d_sort_batcher)
-    );
+const auto kTasks = std::tuple_cat(
+    ppc::util::AddFuncTask<BuzulukskiyDSortBatcherSEQ, InType>(kTestParams, PPC_SETTINGS_buzulukskiy_d_sort_batcher),
+    ppc::util::AddFuncTask<BuzulukskiyDSortBatcherMPI, InType>(kTestParams, PPC_SETTINGS_buzulukskiy_d_sort_batcher));
 
 const auto kValues = ppc::util::ExpandToValues(kTasks);
 
@@ -66,11 +59,7 @@ TEST_P(BuzulukskiyDSortBatcherFuncTests, Run) {
   ExecuteTest(GetParam());
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    SortBatcherFunctionalTests,
-    BuzulukskiyDSortBatcherFuncTests,
-    kValues
-);
+INSTANTIATE_TEST_SUITE_P(SortBatcherFunctionalTests, BuzulukskiyDSortBatcherFuncTests, kValues);
 
 }  // namespace
 }  // namespace buzulukskiy_d_sort_batcher
