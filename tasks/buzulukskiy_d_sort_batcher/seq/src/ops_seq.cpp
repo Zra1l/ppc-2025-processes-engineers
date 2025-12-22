@@ -114,7 +114,10 @@ bool BuzulukskiyDSortBatcherSEQ::PostProcessingImpl() {
 bool BuzulukskiyDSortBatcherSEQ::RunImpl() {
   const std::vector<int> &input = GetInput();
   if (input.size() <= 1) {
-    GetOutput().assign(input.begin(), input.end());
+    GetOutput().clear();
+    if (!input.empty()) {
+      GetOutput().push_back(input[0]);
+    }
     return true;
   }
 
