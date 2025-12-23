@@ -13,67 +13,61 @@ input/output format    -> На вход подаётся std::vector<int>, на 
 constraints            -> N >= 0, все элементы - целые числа
 
 ## 3. Baseline Algorithm (Sequential)
-Describe the base algorithm with enough detail to reproduce.
 
 ```cpp
-  // Алгоритм LSD Radix Sort с обработкой отрицательных чисел
-void RadixSortLSD(std::vector<int>& data) {
-    if (data.empty()) return;
-    
-    // Разделение на положительные и отрицательные числа
-    std::vector<int> positives, negatives;
-    for (int v : data) {
-        if (v < 0) negatives.push_back(v == INT_MIN ? INT_MAX : -v);
-        else positives.push_back(v);
-    }
-    
-    // Сортировка обеих частей
-    if (!positives.empty()) RadixSortUnsigned(positives);
-    if (!negatives.empty()) {
-        RadixSortUnsigned(negatives);
-        std::reverse(negatives.begin(), negatives.end());
-        for (int& v : negatives) v = (v == INT_MAX) ? INT_MIN : -v;
-    }
-    
-    // Объединение результатов
-    data.clear();
-    if (!negatives.empty()) data.insert(data.end(), negatives.begin(), negatives.end());
-    if (!positives.empty()) data.insert(data.end(), positives.begin(), positives.end());
-}
+// масив делится на отриц и неотриц знач(для int min и int max спец обработка)
+std::vector<int> positives;
+std::vector<int> negatives;
 
-//Вспомогательная функция сортировки неотрицательных чисел:
-void RadixSortUnsigned(std::vector<int>& arr) {
-    if (arr.empty()) return;
-    
-    int maxVal = *std::max_element(arr.begin(), arr.end());
-    std::vector<int> output(arr.size());
-    
-    for (int exp = 1; maxVal / exp > 0; exp *= 10) {
-        int count[10] = {0};
-        for (int v : arr) count[(v / exp) % 10]++;
-        for (int i = 1; i < 10; i++) count[i] += count[i-1];
-        for (std::size_t i = arr.size(); i-- > 0;) {
-            int digit = (arr[i] / exp) % 10;
-            output[--count[digit]] = arr[i];
-        }
-        arr.swap(output);
+for (int v : data) {
+    if (v < 0) {
+        negatives.push_back(v == INT_MIN ? INT_MAX : -v);
+    } else {
+        positives.push_back(v);
     }
 }
 
-//Четно-нечетное слияние Бэтчера:
-std::vector<int> BatcherOddEvenMerge(const std::vector<int>& a, const std::vector<int>& b) {
-    std::vector<int> result;
-    result.reserve(a.size() + b.size());
-    std::merge(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(result));
-    return result;
+
+// сортировка неотрицательных чисел
+ for (int exp = 1; maxVal / exp > 0; exp *= 10) {
+    int count[10] = {0};
+
+    for (int v : arr) {
+        count[(v / exp) % 10]++;
+    }
+
+    for (int i = 1; i < 10; i++) {
+        count[i] += count[i - 1];
+    }
+
+    for (std::size_t i = arr.size(); i-- > 0;) {
+        int digit = (arr[i] / exp) % 10;
+        output[--count[digit]] = arr[i];
+    }
+
+    arr.swap(output);
 }
+//сначала результат с отриц числами разворачивается, а потом возр к исход знаку, далее объединение масивов отриц и неотриц
+std::reverse(negatives.begin(), negatives.end());
+
+for (int& v : negatives) {
+    v = (v == INT_MAX) ? INT_MIN : -v;
+}
+data.clear();
+data.insert(data.end(), negatives.begin(), negatives.end());
+data.insert(data.end(), positives.begin(), positives.end());
+
+// для получение отсортировоного масива применяется чётно-нечётная сеть Бэтчера
+if (data[r1] > data[r2]) {
+    std::swap(data[r1], data[r2]);
+}
+
 ```
 Про алгоритм:
- Алгоритм стабильно работает с любым количеством процессов(а не как обычный с 2 4 8 16, теперь и с 6 и тд),
- Алгоритм был реализован так, что отрицательные и положительные числа обрабатываются отдельно
- Также алгоритм стабилен, благодаря обратному проходу при распределении
- Алгоритм не завсит от начального расположения значений(тоесть с ревёрснутыми числами он тоже отлично справляется)
- Способен работать с отрицательными числами
+ Алгоритм был реализован так, что отрицательные и положительные числа обрабатываются отдельно(следовательно поддерживает работу с отрицательными и положительными значениями)
+ Алгоритм не завсит от начального расположения значений и следователь с ревёрснутыми масивами он тоже отлично справляется
+ корректно работает с пустыми массивами
+ поразрядная сортировка является стабильной благодаря обратному проходу
 
 ## 4. Parallelization Scheme
 data distribution:

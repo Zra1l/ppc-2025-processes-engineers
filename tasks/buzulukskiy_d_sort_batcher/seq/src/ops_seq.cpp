@@ -1,12 +1,12 @@
 #include "buzulukskiy_d_sort_batcher/seq/include/ops_seq.hpp"
 
 #include <algorithm>
-#include <array>
 #include <climits>
 #include <cstddef>
-#include <iterator>
 #include <utility>
 #include <vector>
+
+#include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
 
 namespace buzulukskiy_d_sort_batcher {
 
@@ -18,26 +18,20 @@ void RadixSortUnsigned(std::vector<int> &arr) {
   if (arr.empty()) {
     return;
   }
-
   const int max_val = *std::ranges::max_element(arr);
   std::vector<int> output(arr.size());
-
   for (int exp = 1; max_val / exp > 0; exp *= kRadixBase) {
-    std::array<int, kRadixBase> count = {0};
-
-    for (const int value : arr) {
-      ++count[(value / exp) % kRadixBase];
+    std::vector<int> count(static_cast<std::size_t>(kRadixBase), 0);
+    for (const int val : arr) {
+      count[static_cast<std::size_t>((val / exp) % kRadixBase)]++;
     }
-
-    for (int i = 1; i < kRadixBase; ++i) {
+    for (std::size_t i = 1; i < kRadixBase; ++i) {
       count[i] += count[i - 1];
     }
-
     for (std::size_t i = arr.size(); i-- > 0;) {
       const int digit = (arr[i] / exp) % kRadixBase;
-      output[--count[digit]] = arr[i];
+      output[--count[static_cast<std::size_t>(digit)]] = arr[i];
     }
-
     arr.swap(output);
   }
 }
@@ -46,50 +40,55 @@ void RadixSortLSD(std::vector<int> &data) {
   if (data.empty()) {
     return;
   }
-
   std::vector<int> positives;
   std::vector<int> negatives;
-
   for (const int value : data) {
     if (value < 0) {
-      if (value == INT_MIN) {
-        negatives.push_back(INT_MAX);
-      } else {
-        negatives.push_back(-value);
-      }
+      negatives.push_back(value == INT_MIN ? INT_MAX : -value);
     } else {
       positives.push_back(value);
     }
   }
-
   if (!positives.empty()) {
     RadixSortUnsigned(positives);
   }
-
   if (!negatives.empty()) {
     RadixSortUnsigned(negatives);
     std::ranges::reverse(negatives);
-    for (int &value : negatives) {
-      if (value == INT_MAX) {
-        value = INT_MIN;
-      } else {
-        value = -value;
-      }
+    for (int &v : negatives) {
+      v = (v == INT_MAX ? INT_MIN : -v);
     }
   }
-
-  data.clear();
-  data.insert(data.end(), negatives.begin(), negatives.end());
+  data.assign(negatives.begin(), negatives.end());
   data.insert(data.end(), positives.begin(), positives.end());
 }
 
-std::vector<int> BatcherOddEvenMerge(const std::vector<int> &a, const std::vector<int> &b) {
-  std::vector<int> result;
-  result.reserve(a.size() + b.size());
-  std::ranges::merge(a, b, std::back_inserter(result));
-  return result;
+void BatcherStep(std::vector<int> &data, std::size_t i, std::size_t j, std::size_t k, std::size_t p) {
+  const std::size_t r1 = i + j;
+  const std::size_t r2 = i + j + k;
+  if (r2 < data.size() && (r1 / (p * 2)) == (r2 / (p * 2))) {
+    if (data[r1] > data[r2]) {
+      std::swap(data[r1], data[r2]);
+    }
+  }
 }
 
+void BatcherInner(std::vector<int> &data, std::size_t k, std::size_t p) {
+  for (std::size_t j = k % p; j + k < data.size(); j += 2 * k) {
+    for (std::size_t i = 0; i < k; ++i) {
+      BatcherStep(data, i, j, k, p);
+    }
+  }
+}
+
+void BatcherMergeNetwork(std::vector<int> &data) {
+  const std::size_t n = data.size();
+  for (std::size_t p = 1; p < n; p <<= 1) {
+    for (std::size_t k = p; k > 0; k >>= 1) {
+      BatcherInner(data, k, p);
+    }
+  }
+}
 }  // namespace
 
 BuzulukskiyDSortBatcherSEQ::BuzulukskiyDSortBatcherSEQ(const InType &in) {
@@ -100,62 +99,28 @@ BuzulukskiyDSortBatcherSEQ::BuzulukskiyDSortBatcherSEQ(const InType &in) {
 bool BuzulukskiyDSortBatcherSEQ::ValidationImpl() {
   return true;
 }
-
 bool BuzulukskiyDSortBatcherSEQ::PreProcessingImpl() {
   return true;
 }
-
 bool BuzulukskiyDSortBatcherSEQ::PostProcessingImpl() {
   return true;
 }
 
 bool BuzulukskiyDSortBatcherSEQ::RunImpl() {
-  const std::vector<int> &input = GetInput();
-  if (input.size() <= 1) {
-    GetOutput().clear();
-    if (!input.empty()) {
-      GetOutput().push_back(input[0]);
-    }
+  if (GetInput().empty()) {
+    GetOutput() = InType();
     return true;
   }
-
-  std::vector<std::vector<int>> blocks;
-  blocks.reserve((input.size() + kBlockSize - 1) / kBlockSize);
-
-  for (std::size_t i = 0; i < input.size(); i += kBlockSize) {
-    const std::size_t end = std::min(i + kBlockSize, input.size());
-    blocks.emplace_back(input.begin() + static_cast<std::ptrdiff_t>(i),
-                        input.begin() + static_cast<std::ptrdiff_t>(end));
+  std::vector<int> data = GetInput();
+  for (std::size_t i = 0; i < data.size(); i += kBlockSize) {
+    std::size_t current_size = std::min(kBlockSize, data.size() - i);
+    std::vector<int> block(data.begin() + static_cast<std::ptrdiff_t>(i),
+                           data.begin() + static_cast<std::ptrdiff_t>(i + current_size));
+    RadixSortLSD(block);
+    std::copy(block.begin(), block.end(), data.begin() + static_cast<std::ptrdiff_t>(i));
   }
-
-  for (auto &block : blocks) {
-    if (!block.empty()) {
-      RadixSortLSD(block);
-    }
-  }
-
-  while (blocks.size() > 1) {
-    std::vector<std::vector<int>> next_blocks;
-    next_blocks.reserve((blocks.size() + 1) / 2);
-
-    for (std::size_t i = 0; i + 1 < blocks.size(); i += 2) {
-      next_blocks.push_back(BatcherOddEvenMerge(blocks[i], blocks[i + 1]));
-    }
-
-    if (blocks.size() % 2 == 1) {
-      next_blocks.push_back(std::move(blocks.back()));
-    }
-
-    blocks.swap(next_blocks);
-  }
-
-  if (blocks.size() == 1 && !blocks[0].empty()) {
-    GetOutput() = std::vector<int>(blocks[0].begin(), blocks[0].end());
-  } else {
-    GetOutput() = std::vector<int>();
-  }
-
+  BatcherMergeNetwork(data);
+  GetOutput() = std::move(data);
   return true;
 }
-
 }  // namespace buzulukskiy_d_sort_batcher

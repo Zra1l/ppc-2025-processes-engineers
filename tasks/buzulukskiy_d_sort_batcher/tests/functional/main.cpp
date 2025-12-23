@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <array>
-#include <string>
+#include <cstddef>
 #include <tuple>
 #include <vector>
 
@@ -26,7 +26,7 @@ class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InTy
 
   bool CheckTestOutputData(OutType &output) final {
     std::vector<int> expected = input_data_;
-    std::sort(expected.begin(), expected.end());
+    std::ranges::sort(expected);
     return output == expected;
   }
 
@@ -35,7 +35,6 @@ class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InTy
 };
 
 namespace {
-
 const std::array<TestType, 10> kTestParams = {
     TestType{InType{}, "empty"},
     TestType{InType{5}, "single_element"},
@@ -60,6 +59,5 @@ TEST_P(BuzulukskiyDSortBatcherFuncTests, Run) {
 }
 
 INSTANTIATE_TEST_SUITE_P(SortBatcherFunctionalTests, BuzulukskiyDSortBatcherFuncTests, kValues);
-
 }  // namespace
 }  // namespace buzulukskiy_d_sort_batcher
