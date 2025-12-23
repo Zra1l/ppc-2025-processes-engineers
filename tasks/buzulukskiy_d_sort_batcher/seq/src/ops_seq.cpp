@@ -9,7 +9,6 @@
 #include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
 
 namespace buzulukskiy_d_sort_batcher {
-
 namespace {
 constexpr int kRadixBase = 10;
 constexpr std::size_t kBlockSize = 64;
@@ -25,7 +24,7 @@ void RadixSortUnsigned(std::vector<int> &arr) {
     for (const int val : arr) {
       count[static_cast<std::size_t>((val / exp) % kRadixBase)]++;
     }
-    for (std::size_t i = 1; i < kRadixBase; ++i) {
+    for (std::size_t i = 1; i < static_cast<std::size_t>(kRadixBase); ++i) {
       count[i] += count[i - 1];
     }
     for (std::size_t i = arr.size(); i-- > 0;) {
@@ -55,43 +54,43 @@ void RadixSortLSD(std::vector<int> &data) {
   if (!negatives.empty()) {
     RadixSortUnsigned(negatives);
     std::ranges::reverse(negatives);
-    for (int &v : negatives) {
-      v = (v == INT_MAX ? INT_MIN : -v);
+    for (int &v_ref : negatives) {
+      v_ref = (v_ref == INT_MAX ? INT_MIN : -v_ref);
     }
   }
   data.assign(negatives.begin(), negatives.end());
   data.insert(data.end(), positives.begin(), positives.end());
 }
 
-void BatcherStep(std::vector<int> &data, std::size_t i, std::size_t j, std::size_t k, std::size_t p) {
+void BatcherStep(std::vector<int> &data, std::size_t i, std::size_t j, std::size_t k, std::size_t phase_step) {
   const std::size_t r1 = i + j;
   const std::size_t r2 = i + j + k;
-  if (r2 < data.size() && (r1 / (p * 2)) == (r2 / (p * 2))) {
+  if (r2 < data.size() && (r1 / (phase_step * 2)) == (r2 / (phase_step * 2))) {
     if (data[r1] > data[r2]) {
       std::swap(data[r1], data[r2]);
     }
   }
 }
 
-void BatcherInner(std::vector<int> &data, std::size_t k, std::size_t p) {
-  for (std::size_t j = k % p; j + k < data.size(); j += 2 * k) {
+void BatcherInner(std::vector<int> &data, std::size_t k, std::size_t phase_step) {
+  for (std::size_t j = k % phase_step; j + k < data.size(); j += 2 * k) {
     for (std::size_t i = 0; i < k; ++i) {
-      BatcherStep(data, i, j, k, p);
+      BatcherStep(data, i, j, k, phase_step);
     }
   }
 }
 
 void BatcherMergeNetwork(std::vector<int> &data) {
   const std::size_t n = data.size();
-  for (std::size_t p = 1; p < n; p <<= 1) {
-    for (std::size_t k = p; k > 0; k >>= 1) {
-      BatcherInner(data, k, p);
+  for (std::size_t phase_step = 1; phase_step < n; phase_step <<= 1) {
+    for (std::size_t k = phase_step; k > 0; k >>= 1) {
+      BatcherInner(data, k, phase_step);
     }
   }
 }
 }  // namespace
 
-BuzulukskiyDSortBatcherSEQ::BuzulukskiyDSortBatcherSEQ(const InType &in) {
+BuzulukskiyDSortBatcherSEQ::BuzulukskiyDSortBatcherSEQ(const InType &in) : BaseTask() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
 }
@@ -117,7 +116,7 @@ bool BuzulukskiyDSortBatcherSEQ::RunImpl() {
     std::vector<int> block(data.begin() + static_cast<std::ptrdiff_t>(i),
                            data.begin() + static_cast<std::ptrdiff_t>(i + current_size));
     RadixSortLSD(block);
-    std::copy(block.begin(), block.end(), data.begin() + static_cast<std::ptrdiff_t>(i));
+    std::ranges::copy(block, data.begin() + static_cast<std::ptrdiff_t>(i));
   }
   BatcherMergeNetwork(data);
   GetOutput() = std::move(data);

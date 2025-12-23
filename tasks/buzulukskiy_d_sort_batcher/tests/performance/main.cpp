@@ -17,8 +17,8 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
  protected:
   void SetUp() override {
     input_data_.resize(kCount);
-    for (std::size_t i = 0; i < kCount; ++i) {
-      input_data_[i] = static_cast<int>((((kCount - i) * 7) % 10000) - 5000);
+    for (std::size_t idx = 0; idx < kCount; ++idx) {
+      input_data_[idx] = static_cast<int>((((kCount - idx) * 7) % 10000) - 5000);
     }
   }
 
@@ -27,9 +27,9 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
   }
 
   bool CheckTestOutputData(OutType &output) final {
-    std::vector<int> expected = input_data_;
-    std::ranges::sort(expected);
-    return output == expected;
+    std::vector<int> expected_data = input_data_;
+    std::ranges::sort(expected_data);
+    return output == expected_data;
   }
 
  private:
@@ -38,13 +38,7 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
 };
 
 TEST_P(BuzulukskiyDSortBatcherPerfTests, RunPerf) {
-  const auto start = std::chrono::high_resolution_clock::now();
   ExecuteTest(GetParam());
-  const auto end = std::chrono::high_resolution_clock::now();
-
-  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-  std::cout << "Execution time: " << ms << " ms\n";
 }
 
 const auto kPerfTasks = ppc::util::MakeAllPerfTasks<InType, BuzulukskiyDSortBatcherSEQ, BuzulukskiyDSortBatcherMPI>(
@@ -52,7 +46,6 @@ const auto kPerfTasks = ppc::util::MakeAllPerfTasks<InType, BuzulukskiyDSortBatc
 
 const auto kPerfValues = ppc::util::TupleToGTestValues(kPerfTasks);
 
-INSTANTIATE_TEST_SUITE_P(SortBatcherPerfTests, BuzulukskiyDSortBatcherPerfTests, kPerfValues,
-                         BuzulukskiyDSortBatcherPerfTests::CustomPerfTestName);
+INSTANTIATE_TEST_SUITE_P(SortBatcherPerfTests, BuzulukskiyDSortBatcherPerfTests, kPerfValues);
 
 }  // namespace buzulukskiy_d_sort_batcher

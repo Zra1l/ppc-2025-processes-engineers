@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -16,8 +17,9 @@ namespace buzulukskiy_d_sort_batcher {
 class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  protected:
   void SetUp() override {
-    const TestType &param = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
-    input_data_ = std::get<0>(param);
+    const TestType &test_param =
+        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    input_data_ = std::get<0>(test_param);
   }
 
   InType GetTestInputData() final {
@@ -25,9 +27,9 @@ class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
   bool CheckTestOutputData(OutType &output) final {
-    std::vector<int> expected = input_data_;
-    std::ranges::sort(expected);
-    return output == expected;
+    std::vector<int> expected_data = input_data_;
+    std::ranges::sort(expected_data);
+    return output == expected_data;
   }
 
  private:

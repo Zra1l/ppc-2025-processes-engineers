@@ -13,7 +13,6 @@
 #include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
 
 namespace buzulukskiy_d_sort_batcher {
-
 namespace {
 constexpr int kRadixBase = 10;
 constexpr int kMaxIterations = 100;
@@ -26,10 +25,10 @@ void RadixSortUnsigned(std::vector<int> &arr) {
   std::vector<int> output(arr.size());
   for (int exp = 1; max_val / exp > 0; exp *= kRadixBase) {
     std::vector<int> count(static_cast<std::size_t>(kRadixBase), 0);
-    for (const int value : arr) {
-      count[static_cast<std::size_t>((value / exp) % kRadixBase)]++;
+    for (const int val : arr) {
+      count[static_cast<std::size_t>((val / exp) % kRadixBase)]++;
     }
-    for (std::size_t i = 1; i < kRadixBase; ++i) {
+    for (std::size_t i = 1; i < static_cast<std::size_t>(kRadixBase); ++i) {
       count[i] += count[i - 1];
     }
     for (std::size_t i = arr.size(); i-- > 0;) {
@@ -46,11 +45,11 @@ void RadixSortLSD(std::vector<int> &data) {
   }
   std::vector<int> positives;
   std::vector<int> negatives;
-  for (const int value : data) {
-    if (value < 0) {
-      negatives.push_back(value == INT_MIN ? INT_MAX : -value);
+  for (const int val : data) {
+    if (val < 0) {
+      negatives.push_back(val == INT_MIN ? INT_MAX : -val);
     } else {
-      positives.push_back(value);
+      positives.push_back(val);
     }
   }
   if (!positives.empty()) {
@@ -59,8 +58,8 @@ void RadixSortLSD(std::vector<int> &data) {
   if (!negatives.empty()) {
     RadixSortUnsigned(negatives);
     std::ranges::reverse(negatives);
-    for (int &v : negatives) {
-      v = (v == INT_MAX ? INT_MIN : -v);
+    for (int &v_ref : negatives) {
+      v_ref = (v_ref == INT_MAX ? INT_MIN : -v_ref);
     }
   }
   data.clear();
@@ -69,7 +68,7 @@ void RadixSortLSD(std::vector<int> &data) {
 }
 
 void ExchangeAndMerge(std::vector<int> &local, int partner, const std::vector<int> &counts, int rank) {
-  if (partner < 0 || partner >= static_cast<int>(counts.size())) {
+  if (partner < 0 || std::cmp_greater_equal(partner, counts.size())) {
     return;
   }
   std::vector<int> remote(static_cast<std::size_t>(counts[static_cast<std::size_t>(partner)]));
@@ -86,11 +85,11 @@ void ExchangeAndMerge(std::vector<int> &local, int partner, const std::vector<in
   }
 }
 
-void BatcherStep(int i, int j, int k, int p, int rank, int size, std::vector<int> &local,
+void BatcherStep(int i, int j, int k, int phase_step, int rank, int size, std::vector<int> &local,
                  const std::vector<int> &counts) {
   const int r1 = i + j;
   const int r2 = i + j + k;
-  if (r2 < size && (r1 / (p * 2)) == (r2 / (p * 2))) {
+  if (r2 < size && (r1 / (phase_step * 2)) == (r2 / (phase_step * 2))) {
     if (rank == r1) {
       ExchangeAndMerge(local, r2, counts, rank);
     } else if (rank == r2) {
@@ -99,27 +98,28 @@ void BatcherStep(int i, int j, int k, int p, int rank, int size, std::vector<int
   }
 }
 
-void BatcherInner(int k, int p, int rank, int size, std::vector<int> &local, const std::vector<int> &counts) {
-  for (int j = k % p; j + k < size; j += 2 * k) {
+void BatcherInner(int k, int phase_step, int rank, int size, std::vector<int> &local, const std::vector<int> &counts) {
+  for (int j = k % phase_step; j + k < size; j += 2 * k) {
     for (int i = 0; i < k; ++i) {
-      BatcherStep(i, j, k, p, rank, size, local, counts);
+      BatcherStep(i, j, k, phase_step, rank, size, local, counts);
     }
   }
 }
 
 void BatcherNetworkPhase(std::vector<int> &local, int rank, int size, const std::vector<int> &counts) {
-  for (int p = 1; p < size; p <<= 1) {
-    for (int k = p; k > 0; k >>= 1) {
-      BatcherInner(k, p, rank, size, local, counts);
+  // Исправлено: p -> phase_step (длина имени)
+  for (int phase_step = 1; phase_step < size; phase_step <<= 1) {
+    for (int k = phase_step; k > 0; k >>= 1) {
+      BatcherInner(k, phase_step, rank, size, local, counts);
       MPI_Barrier(MPI_COMM_WORLD);
     }
   }
 }
 
 void BatcherStabilizationPhase(std::vector<int> &local, int rank, int size, const std::vector<int> &counts) {
-  const int steps = std::min(size, kMaxIterations);
-  for (int s = 0; s < steps; ++s) {
-    bool even_step = (s % 2 == 0);
+  const int step_limit = std::min(size, kMaxIterations);
+  for (int step_idx = 0; step_idx < step_limit; ++step_idx) {
+    bool even_step = (step_idx % 2 == 0);
     bool even_rank = (rank % 2 == 0);
     int partner = (even_step == even_rank) ? rank + 1 : rank - 1;
     if (partner >= 0 && partner < size) {
@@ -144,7 +144,7 @@ std::tuple<std::vector<int>, std::vector<int>, std::size_t> CalculateDistributio
 }
 }  // namespace
 
-BuzulukskiyDSortBatcherMPI::BuzulukskiyDSortBatcherMPI(const InType &in) {
+BuzulukskiyDSortBatcherMPI::BuzulukskiyDSortBatcherMPI(const InType &in) : BaseTask() {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
 }
