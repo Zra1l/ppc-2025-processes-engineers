@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <chrono>
 #include <cstddef>
-#include <iostream>
 #include <vector>
 
 #include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
