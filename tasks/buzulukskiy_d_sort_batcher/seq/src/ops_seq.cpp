@@ -1,9 +1,11 @@
 #include "buzulukskiy_d_sort_batcher/seq/include/ops_seq.hpp"
 
 #include <algorithm>
+#include <array>
 #include <climits>
 #include <cstddef>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 namespace buzulukskiy_d_sort_batcher {
@@ -17,11 +19,11 @@ void RadixSortUnsigned(std::vector<int> &arr) {
     return;
   }
 
-  const int maxVal = *std::max_element(arr.begin(), arr.end());
+  const int max_val = *std::ranges::max_element(arr);
   std::vector<int> output(arr.size());
 
-  for (int exp = 1; maxVal / exp > 0; exp *= kRadixBase) {
-    int count[kRadixBase] = {0};
+  for (int exp = 1; max_val / exp > 0; exp *= kRadixBase) {
+    std::array<int, kRadixBase> count = {0};
 
     for (const int value : arr) {
       ++count[(value / exp) % kRadixBase];
@@ -63,10 +65,10 @@ void RadixSortLSD(std::vector<int> &data) {
   if (!positives.empty()) {
     RadixSortUnsigned(positives);
   }
+
   if (!negatives.empty()) {
     RadixSortUnsigned(negatives);
-
-    std::reverse(negatives.begin(), negatives.end());
+    std::ranges::reverse(negatives);
     for (int &value : negatives) {
       if (value == INT_MAX) {
         value = INT_MIN;
@@ -77,18 +79,14 @@ void RadixSortLSD(std::vector<int> &data) {
   }
 
   data.clear();
-  if (!negatives.empty()) {
-    data.insert(data.end(), negatives.begin(), negatives.end());
-  }
-  if (!positives.empty()) {
-    data.insert(data.end(), positives.begin(), positives.end());
-  }
+  data.insert(data.end(), negatives.begin(), negatives.end());
+  data.insert(data.end(), positives.begin(), positives.end());
 }
 
 std::vector<int> BatcherOddEvenMerge(const std::vector<int> &a, const std::vector<int> &b) {
   std::vector<int> result;
   result.reserve(a.size() + b.size());
-  std::merge(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(result));
+  std::ranges::merge(a, b, std::back_inserter(result));
   return result;
 }
 
@@ -137,18 +135,18 @@ bool BuzulukskiyDSortBatcherSEQ::RunImpl() {
   }
 
   while (blocks.size() > 1) {
-    std::vector<std::vector<int>> nextBlocks;
-    nextBlocks.reserve((blocks.size() + 1) / 2);
+    std::vector<std::vector<int>> next_blocks;
+    next_blocks.reserve((blocks.size() + 1) / 2);
 
     for (std::size_t i = 0; i + 1 < blocks.size(); i += 2) {
-      nextBlocks.push_back(BatcherOddEvenMerge(blocks[i], blocks[i + 1]));
+      next_blocks.push_back(BatcherOddEvenMerge(blocks[i], blocks[i + 1]));
     }
 
     if (blocks.size() % 2 == 1) {
-      nextBlocks.push_back(std::move(blocks.back()));
+      next_blocks.push_back(std::move(blocks.back()));
     }
 
-    blocks.swap(nextBlocks);
+    blocks.swap(next_blocks);
   }
 
   if (blocks.size() == 1 && !blocks[0].empty()) {

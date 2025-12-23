@@ -3,9 +3,12 @@
 #include <mpi.h>
 
 #include <algorithm>
+#include <array>
 #include <climits>
 #include <cstddef>
-#include <iostream>
+#include <iterator>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace buzulukskiy_d_sort_batcher {
@@ -14,31 +17,18 @@ namespace {
 constexpr int kRadixBase = 10;
 constexpr int kMaxIterations = 100;
 
-void RadixSortLSD(std::vector<int> &data) {
-  if (data.empty()) {
+void RadixSortUnsigned(std::vector<int> &arr) {
+  if (arr.empty()) {
     return;
   }
 
-  const long long minVal = static_cast<long long>(*std::min_element(data.begin(), data.end()));
+  const int max_val = *std::ranges::max_element(arr);
+  std::vector<int> output(arr.size());
 
-  if (minVal < 0) {
-    for (auto &value : data) {
-      const long long shiftedValue = static_cast<long long>(value) - minVal;
-      if (shiftedValue > static_cast<long long>(INT_MAX)) {
-        value = INT_MAX;
-      } else {
-        value = static_cast<int>(shiftedValue);
-      }
-    }
-  }
+  for (int exp = 1; max_val / exp > 0; exp *= kRadixBase) {
+    std::array<int, kRadixBase> count = {0};
 
-  const int maxVal = *std::max_element(data.begin(), data.end());
-  std::vector<int> output(data.size());
-
-  for (int exp = 1; maxVal / exp > 0; exp *= kRadixBase) {
-    int count[kRadixBase] = {0};
-
-    for (const int value : data) {
+    for (const int value : arr) {
       ++count[(value / exp) % kRadixBase];
     }
 
@@ -46,59 +36,79 @@ void RadixSortLSD(std::vector<int> &data) {
       count[i] += count[i - 1];
     }
 
-    for (std::size_t idx = data.size(); idx-- > 0;) {
-      const int digit = (data[idx] / exp) % kRadixBase;
-      output[--count[digit]] = data[idx];
+    for (std::size_t i = arr.size(); i-- > 0;) {
+      const int digit = (arr[i] / exp) % kRadixBase;
+      output[--count[digit]] = arr[i];
     }
 
-    data.swap(output);
-  }
-
-  if (minVal < 0) {
-    for (auto &value : data) {
-      const long long originalValue = static_cast<long long>(value) + minVal;
-      if (originalValue < static_cast<long long>(INT_MIN)) {
-        value = INT_MIN;
-      } else if (originalValue > static_cast<long long>(INT_MAX)) {
-        value = INT_MAX;
-      } else {
-        value = static_cast<int>(originalValue);
-      }
-    }
+    arr.swap(output);
   }
 }
 
-void ExchangeAndMerge(std::vector<int> &local, int partner, const std::vector<int> &counts, int rank) {
-  if (partner < 0 || partner >= static_cast<int>(counts.size())) {
+void RadixSortLSD(std::vector<int> &data) {
+  if (data.empty()) {
     return;
   }
 
-  const std::size_t remoteSize = static_cast<std::size_t>(counts[static_cast<std::size_t>(partner)]);
-  std::vector<int> remote(remoteSize);
+  std::vector<int> positives;
+  std::vector<int> negatives;
+
+  for (const int value : data) {
+    if (value < 0) {
+      negatives.push_back(-value);
+    } else {
+      positives.push_back(value);
+    }
+  }
+
+  if (!positives.empty()) {
+    RadixSortUnsigned(positives);
+  }
+
+  if (!negatives.empty()) {
+    RadixSortUnsigned(negatives);
+    std::ranges::reverse(negatives);
+    for (int &value : negatives) {
+      value = -value;
+    }
+  }
+
+  data.clear();
+  data.insert(data.end(), negatives.begin(), negatives.end());
+  data.insert(data.end(), positives.begin(), positives.end());
+}
+
+void ExchangeAndMerge(std::vector<int> &local, int partner, const std::vector<int> &counts, int rank) {
+  if (partner < 0 || std::cmp_greater_equal(partner, static_cast<int>(counts.size()))) {
+    return;
+  }
+
+  const auto remote_size = static_cast<std::size_t>(counts[static_cast<std::size_t>(partner)]);
+  std::vector<int> remote(remote_size);
 
   MPI_Sendrecv(local.data(), static_cast<int>(local.size()), MPI_INT, partner, 0, remote.data(),
                static_cast<int>(remote.size()), MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   std::vector<int> combined;
   combined.reserve(local.size() + remote.size());
-  std::merge(local.begin(), local.end(), remote.begin(), remote.end(), std::back_inserter(combined));
+  std::ranges::merge(local, remote, std::back_inserter(combined));
 
-  const std::size_t myCount = static_cast<std::size_t>(counts[static_cast<std::size_t>(rank)]);
-  if (myCount > combined.size()) {
+  const auto my_count = static_cast<std::size_t>(counts[static_cast<std::size_t>(rank)]);
+  if (my_count > combined.size()) {
     return;
   }
 
   if (rank < partner) {
-    local.assign(combined.begin(), combined.begin() + static_cast<std::ptrdiff_t>(myCount));
+    local.assign(combined.begin(), combined.begin() + static_cast<std::ptrdiff_t>(my_count));
   } else {
-    local.assign(combined.end() - static_cast<std::ptrdiff_t>(myCount), combined.end());
+    local.assign(combined.end() - static_cast<std::ptrdiff_t>(my_count), combined.end());
   }
 }
 
 void BatcherStabilizationPhase(std::vector<int> &local, int rank, int size, const std::vector<int> &counts) {
-  const int stabilizationSteps = std::min(size, kMaxIterations);
+  const int stabilization_steps = std::min(size, kMaxIterations);
 
-  for (int step = 0; step < stabilizationSteps; ++step) {
+  for (int step = 0; step < stabilization_steps; ++step) {
     int partner = 0;
     if (step % 2 == 0) {
       partner = (rank % 2 == 0) ? rank + 1 : rank - 1;
@@ -114,14 +124,14 @@ void BatcherStabilizationPhase(std::vector<int> &local, int rank, int size, cons
 }
 
 void BatcherNetworkPhase(std::vector<int> &local, int rank, int size, const std::vector<int> &counts) {
-  for (int p = 1; p < size; p <<= 1) {
-    for (int k = p; k > 0; k >>= 1) {
-      for (int j = k % p; j + k < size; j += 2 * k) {
+  for (int phase = 1; phase < size; phase <<= 1) {
+    for (int k = phase; k > 0; k >>= 1) {
+      for (int j = k % phase; j + k < size; j += 2 * k) {
         for (int i = 0; i < k && i + j + k < size; ++i) {
           const int r1 = i + j;
           const int r2 = i + j + k;
 
-          if ((r1 / (p * 2)) == (r2 / (p * 2))) {
+          if ((r1 / (phase * 2)) == (r2 / (phase * 2))) {
             if (rank == r1 || rank == r2) {
               const int partner = (rank == r1) ? r2 : r1;
               ExchangeAndMerge(local, partner, counts, rank);
@@ -148,8 +158,8 @@ std::tuple<std::vector<int>, std::vector<int>, std::size_t> CalculateDistributio
     offset += counts[static_cast<std::size_t>(i)];
   }
 
-  const std::size_t localSize = static_cast<std::size_t>(counts[static_cast<std::size_t>(rank)]);
-  return {counts, displs, localSize};
+  const auto local_size = static_cast<std::size_t>(counts[static_cast<std::size_t>(rank)]);
+  return {counts, displs, local_size};
 }
 
 }  // namespace
@@ -190,18 +200,17 @@ bool BuzulukskiyDSortBatcherMPI::RunImpl() {
     return true;
   }
 
-  auto [counts, displs, localSize] = CalculateDistribution(n, size, rank);
+  auto [counts, displs, local_size] = CalculateDistribution(n, size, rank);
 
-  std::vector<int> local(localSize);
+  std::vector<int> local(local_size);
   MPI_Scatterv(rank == 0 ? GetInput().data() : nullptr, counts.data(), displs.data(), MPI_INT, local.data(),
-               static_cast<int>(localSize), MPI_INT, 0, MPI_COMM_WORLD);
+               static_cast<int>(local_size), MPI_INT, 0, MPI_COMM_WORLD);
 
   if (!local.empty()) {
     RadixSortLSD(local);
   }
 
   BatcherNetworkPhase(local, rank, size, counts);
-
   BatcherStabilizationPhase(local, rank, size, counts);
 
   std::vector<int> result(static_cast<std::size_t>(n));

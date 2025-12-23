@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vector>
-
 #include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
+#include "task/include/task.hpp"
 
 namespace buzulukskiy_d_sort_batcher {
 

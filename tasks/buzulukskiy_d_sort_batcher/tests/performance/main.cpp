@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <vector>
 
 #include "buzulukskiy_d_sort_batcher/common/include/common.hpp"
@@ -16,7 +17,7 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
   void SetUp() override {
     input_data_.resize(kCount);
     for (std::size_t i = 0; i < kCount; ++i) {
-      input_data_[i] = static_cast<int>((kCount - i) * 7 % 10000 - 5000);
+      input_data_[i] = static_cast<int>(((kCount - i) * 7) % 10000 - 5000);
     }
   }
 
@@ -26,7 +27,7 @@ class BuzulukskiyDSortBatcherPerfTests : public ppc::util::BaseRunPerfTests<InTy
 
   bool CheckTestOutputData(OutType &output) final {
     std::vector<int> expected = input_data_;
-    std::sort(expected.begin(), expected.end());
+    std::ranges::sort(expected);
     return output == expected;
   }
 
