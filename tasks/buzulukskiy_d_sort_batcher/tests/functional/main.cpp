@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <string>
 #include <tuple>
 #include <vector>
 
@@ -17,7 +16,7 @@ class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InTy
  protected:
   void SetUp() override {
     const auto &params = GetParam();
-    const TestType &test_param = std::get<TestType>(params);
+    const auto &test_param = std::get<TestType>(params);
     input_data_ = std::get<0>(test_param);
   }
 
