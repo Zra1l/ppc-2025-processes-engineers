@@ -25,7 +25,7 @@ class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InTy
   }
 
   bool CheckTestOutputData(OutType &output) final {
-    std::vector<int> expected_data = input_data_;
+    auto expected_data = input_data_;
     std::ranges::sort(expected_data);
     return output == expected_data;
   }
