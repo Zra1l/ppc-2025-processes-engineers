@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstddef>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -16,8 +16,8 @@ namespace buzulukskiy_d_sort_batcher {
 class BuzulukskiyDSortBatcherFuncTests : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  protected:
   void SetUp() override {
-    const TestType &test_param =
-        std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const auto &params = GetParam();
+    const TestType &test_param = std::get<TestType>(params);
     input_data_ = std::get<0>(test_param);
   }
 
